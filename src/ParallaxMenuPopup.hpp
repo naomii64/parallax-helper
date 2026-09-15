@@ -2,7 +2,7 @@
 #include <Geode/Geode.hpp>
 
 #include "ParallaxSetup.hpp"
-#include <Alphas-UI-Pack/API.hpp>
+#include <alphalaneous.alphas-ui-pack/include/API.hpp>
 using namespace alpha::prelude;
 
 using namespace geode::prelude;

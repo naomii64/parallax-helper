@@ -173,12 +173,12 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
     actionButtonMenu->setPosition({padAmount,padAmount+1.5f});
     actionButtonMenu->setScale(0.5f);
 
-    auto createSetupButton = CCMenuItemLabel::create(
+    auto createSetupButton = CCMenuItemSpriteExtra::create(
         ButtonSprite::create("Create Parallax Setup"),
         this,
         menu_selector(ParallaxMenuPopup::onCreateSetupButton)
     );
-    auto cleanTriggersButton = CCMenuItemLabel::create(
+    auto cleanTriggersButton = CCMenuItemSpriteExtra::create(
         ButtonSprite::create("Clean up Triggers"),
         this,
         menu_selector(ParallaxMenuPopup::onCleanupTriggersButton)
@@ -194,6 +194,11 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
 
     return true;
 }
+
+//TODO: clean this up
+//to avoid build issues on android this needs to be a variable to use with nextFreeGroupID
+const gd::unordered_set<int> excludegroups = {};
+
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
 
     if(!m_editorLayer) return;
@@ -207,7 +212,7 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(objectID::FOLLOW_TRIGGER,{0.0f,0.0f},false));
     auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(objectID::SCALE_TRIGGER,{editorTileSize,0.0f},false));
     //give them the correct groups
-    int newLayerGroupID = m_editorLayer->getNextFreeGroupID({});
+    int newLayerGroupID = m_editorLayer->getNextFreeGroupID(excludegroups);
     //set the target gid
     newFollowTrigger->m_targetGroupID = newLayerGroupID;
     newScaleTrigger->m_targetGroupID = newLayerGroupID;
@@ -272,9 +277,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
-    int rootID = m_editorLayer->getNextFreeGroupID({});
+    int rootID = m_editorLayer->getNextFreeGroupID(excludegroups);
     newAreaMoveTrigger->m_targetGroupID=rootID;
-    int followID = m_editorLayer->getNextFreeGroupID({});
+    int followID = m_editorLayer->getNextFreeGroupID(excludegroups);
     newAdvancedFollowTrigger->m_centerGroupID = rootID;
     newAdvancedFollowTrigger->m_targetGroupID = followID;
     //update these
