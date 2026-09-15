@@ -197,7 +197,7 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
 
 //TODO: clean this up
 //to avoid build issues on android this needs to be a variable to use with nextFreeGroupID
-const gd::unordered_set<int> excludegroups = {};
+const gd::unordered_set<int> noExcludeGroups{};
 
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
 
@@ -212,7 +212,7 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(objectID::FOLLOW_TRIGGER,{0.0f,0.0f},false));
     auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(objectID::SCALE_TRIGGER,{editorTileSize,0.0f},false));
     //give them the correct groups
-    int newLayerGroupID = m_editorLayer->getNextFreeGroupID(excludegroups);
+    int newLayerGroupID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
     //set the target gid
     newFollowTrigger->m_targetGroupID = newLayerGroupID;
     newScaleTrigger->m_targetGroupID = newLayerGroupID;
@@ -277,9 +277,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
-    int rootID = m_editorLayer->getNextFreeGroupID(excludegroups);
+    int rootID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
     newAreaMoveTrigger->m_targetGroupID=rootID;
-    int followID = m_editorLayer->getNextFreeGroupID(excludegroups);
+    int followID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
     newAdvancedFollowTrigger->m_centerGroupID = rootID;
     newAdvancedFollowTrigger->m_targetGroupID = followID;
     //update these
