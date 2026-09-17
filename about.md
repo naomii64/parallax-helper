@@ -1,3 +1,3 @@
-# Template Mod
+# Parallax Helper
 
-Edit about.md to change this
+A mod that makes it simple to create and edit parallax effects.

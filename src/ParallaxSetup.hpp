@@ -24,6 +24,14 @@ public:
 
     EnterEffectObject* m_areaMoveTriggerPtr = nullptr;
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;
+
+    ParallaxSetupLayer* addLayer(TransformTriggerGameObject* scaleTrigger,EffectGameObject* followTrigger);
+    CCPoint getPositionForNewLayerTriggers();
+
+    //sorting functions
+    std::vector<ParallaxSetupLayer*> getLayerPointerList();//basically no sort, used as a base for sort functions
+    std::vector<ParallaxSetupLayer*> sortDepth();
+    std::vector<ParallaxSetupLayer*> sortGroupID();
 private:
 
 };
@@ -33,6 +41,8 @@ public:
     //scans the given editor for setups and makes a list
     void scanEditorForSetups(LevelEditorLayer* editorLayer);
     std::deque<ParallaxSetup> m_setups;
+
+    ParallaxSetup* addSetup(EnterEffectObject* areaMoveTrigger,AdvancedFollowTriggerObject* advancedFollowTrigger);
 private:
 
 };

@@ -40,7 +40,6 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     m_depthInput->setAnchorPoint({1.0f,0.5f});
     m_depthInput->setPosition({size.width,size.height/2});
     
-    //depthInput->setString("0.00");
     m_depthInput->setString(fmt::to_string(depth));
 
     addChild(m_depthInput);

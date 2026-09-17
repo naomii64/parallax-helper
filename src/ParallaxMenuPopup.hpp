@@ -11,24 +11,35 @@ using namespace geode::prelude;
 
 class ParallaxMenuPopup : public geode::Popup {
 public:
-    //TODO: theres no need to pass and store BOTH of these, this only needs to pass and store the ui
-    static ParallaxMenuPopup* create(LevelEditorLayer* editor,MyEditorUI* editorUI);
+    static ParallaxMenuPopup* create(MyEditorUI* editorUI);
 
     ParallaxSetup* getSelectedSetup();
+
+    void updateAllUI();
 protected:
-    bool init(LevelEditorLayer* editor,MyEditorUI* editorUI);
+    bool init(MyEditorUI* editorUI);
+
+    void loadSetupLayerList(ParallaxSetup* setup);
 
     ParallaxSetupList m_parallaxSetupList;
 
     void onAddLayerButton(CCObject *);
     void onCleanupTriggersButton(CCObject *);
     void onCreateSetupButton(CCObject *);
-    
+    void onFindSetupInEditorButton(CCObject *);
 
     LevelEditorLayer* m_editorLayer = nullptr;
     MyEditorUI* m_editorUI = nullptr;
 
     void addLayerNodeToList(ParallaxSetupLayer* layer);//node: this does NOT update the layout
-    CCNode* m_layerListNode;
-    alpha::ui::AdvancedScrollLayer* m_scrollLayer;
+    NineSlice* m_layerListBackground = nullptr;
+    CCNode* m_layerListNode = nullptr;
+    AdvancedScrollLayer* m_scrollLayer = nullptr;
+    AdvancedScrollBar* m_layerListScrollBar = nullptr;
+
+    CCMenuItemSpriteExtra* m_addLayerButton = nullptr;
+    Label* m_layerListHint = nullptr;
+private:
+    void updateAddLayerButton();
+    void updateLayerListHint();
 };

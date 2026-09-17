@@ -17,7 +17,4 @@ protected:
     geode::TextInput* m_depthInput = nullptr;
 
     ParallaxSetupLayer* m_layerPtr = nullptr;
-    ////these get stored
-    //EffectGameObject* m_followTriggerPtr = nullptr;
-    //TransformTriggerGameObject* m_scaleTriggerPtr = nullptr;
 };

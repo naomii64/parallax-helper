@@ -13,11 +13,15 @@
 	"description": "A mod that manages parallax effects in levels to make it easier.",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3",
-		"alphalaneous.alphas-ui-pack": ">=v1.3.4"
+		"alphalaneous.alphas-ui-pack": ">=v1.3.4",
+		"nwo5.silly-api": ">=2.0.1"
 	},
 	"resources": {
 		"sprites": [
 			"resources/*.png"
 		]
+	},
+	"settings": {
+		
 	}
 }

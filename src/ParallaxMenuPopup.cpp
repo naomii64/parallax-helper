@@ -3,8 +3,10 @@
 
 #include "ParallaxMenuLayerNode.hpp"
 
-#include "ObjectID.hpp"
+#include "constants.hpp"
 
+#include <nwo5.silly-api/include/include.hpp>
+using namespace nwo5::editor::prelude;
 
 constexpr float popupWidth = 380;
 constexpr float popupHeight = 290;
@@ -12,45 +14,51 @@ constexpr float popupHeight = 290;
 constexpr float padAmount = 10;
 constexpr float layerListWidth = 200.0f;
 constexpr float layerListHeight = 240.0f;
-    
-constexpr float editorTileSize = 30.0f;
 
-bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
+constexpr float layerListX = popupWidth-padAmount;
+
+void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
+{
+    m_layerListNode->removeAllChildren();
+    if(setup){
+        auto sortedLayers = setup->sortDepth();
+        for(auto layerPtr : sortedLayers){
+            addLayerNodeToList(layerPtr);
+        }
+    }
+
+    //update everything in the right order
+    m_layerListNode->updateLayout();
+    m_scrollLayer->updateLayout();
+    m_layerListBackground->updateLayout();
+}
+
+//todo: clean up this init ui function
+bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
+{
 
     if (!Popup::init({popupWidth, popupHeight})) return false;
     //disable the popup animation
     m_noElasticity = true;
 
-    //save these pointer
-    m_editorLayer = editor;
+    //save these pointers
     m_editorUI = editorUI;
+    m_editorLayer = editorUI->m_editorLayer;
+    m_layerListBackground = NineSlice::create("square02b_001.png");
+    m_layerListBackground->setColor({0, 0, 0});
+    m_layerListBackground->setOpacity(44);
+    m_layerListBackground->setAnchorPoint({1.0f,0.0f});
 
-    //set the title of the menu
-    //this->setTitle("Parallax Helper");
-    
-    /*
-        CREATE THE LAYER LIST
-    */
+    m_layerListBackground->setPosition({layerListX,padAmount+1.5});/*+1.5 to account for the shadow*/
+    m_layerListBackground->setContentSize({layerListWidth,layerListHeight});
 
-    //setup the layer list maybe
-    auto layerList_bg = NineSlice::create("square02b_001.png");
-    layerList_bg->setColor({0, 0, 0});
-    layerList_bg->setOpacity(44);
-    //setup the position like this for now
-    layerList_bg->setAnchorPoint({1.0f,0.0f});
-    //aligning stuff witht he layer list
-    constexpr float layerListX = popupWidth-padAmount;
-    layerList_bg->setPosition({layerListX,padAmount+1.5});/*+1.5 to account for the shadow*/
-    layerList_bg->setContentSize({layerListWidth,layerListHeight});
-
-    layerList_bg->setLayout(
+    m_layerListBackground->setLayout(
         AxisLayout::create()
         ->setPadding({5.0f,5.0f,5.0f,5.0f})
     );
 
-    m_mainLayer->addChild(layerList_bg);
+    m_mainLayer->addChild(m_layerListBackground);
 
-    //create the list of notes
     m_layerListNode = CCNode::create();
     m_layerListNode->setLayout(
         AxisLayout::create(Axis::Column)
@@ -62,51 +70,20 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
     m_scrollLayer = AdvancedScrollLayer::create({layerListWidth,260});
     m_scrollLayer->setAnchorPoint({0.0f,0.0f});
     m_scrollLayer->setLayout(AxisLayout::create());
-    //make a bar for it
-    auto scrollBar = AdvancedScrollBar::create(m_scrollLayer,ScrollOrientation::VERTICAL);
+
     
+    m_layerListScrollBar = AdvancedScrollBar::create(m_scrollLayer,ScrollOrientation::VERTICAL);
 
-
-    layerList_bg->addChild(m_scrollLayer);
-    layerList_bg->addChild(scrollBar);
+    m_layerListBackground->addChild(m_scrollLayer);
+    m_layerListBackground->addChild(m_layerListScrollBar);
     
     m_scrollLayer->addChild(m_layerListNode);
 
     //create the parallax setup list
-	m_parallaxSetupList.scanEditorForSetups(editor);
+	m_parallaxSetupList.scanEditorForSetups(m_editorLayer);
     
     auto setup = getSelectedSetup();
-    if(setup){
-        //sort the list
-        //make a list of pointers to sort
-        std::vector<ParallaxSetupLayer*> layerPointers;
-        layerPointers.reserve(setup->m_layers.size());
-        for(auto& layer : setup->m_layers){
-            layerPointers.push_back(&layer);
-        }
-        //now they can be sorted or whatever
-        //sort by depth
-        std::sort(layerPointers.begin(), layerPointers.end(),
-            [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
-                return a->m_layerDepth < b->m_layerDepth;
-            }
-        );
-
-        //add them to the screen
-        for(auto layerPtr : layerPointers){
-            addLayerNodeToList(layerPtr);
-        }
-    }
-    //add nodes for testing
-    //for(size_t i=0;i<5;i++){
-    //    auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,40});
-    //    layerListNode->addChild(layerNode);
-    //}
-
-    //update everything in the right order
-    m_layerListNode->updateLayout();
-    m_scrollLayer->updateLayout();
-    layerList_bg->updateLayout();
+    loadSetupLayerList(setup);
 
     /*
         CREATE THE SORT BUTTON FOR THE LAYER LIST
@@ -123,7 +100,7 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
     auto sortButton = CCMenuItemSpriteExtra::create(
         EditorButtonSprite::createWithSpriteFrameName("GJ_sortIcon_001.png"), 
         this, 
-        nullptr/*callback*/
+        nullptr
     );
     sortMenu->addChild(sortButton);
     sortMenu->updateLayout();
@@ -140,12 +117,13 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
         AxisLayout::create()
         ->setAxisAlignment(AxisAlignment::Start)
     );
-    auto addLayerButton = CCMenuItemSpriteExtra::create(
+    m_addLayerButton = CCMenuItemSpriteExtra::create(
         EditorButtonSprite::createWithSpriteFrameName("edit_addCBtn_001.png"), 
         this, 
         menu_selector(ParallaxMenuPopup::onAddLayerButton)
     );
-    addLayerMenu->addChild(addLayerButton);
+
+    addLayerMenu->addChild(m_addLayerButton);
     addLayerMenu->updateLayout();
     m_mainLayer->addChild(addLayerMenu);
 
@@ -170,33 +148,87 @@ bool ParallaxMenuPopup::init(LevelEditorLayer* editor,MyEditorUI* editorUI) {
         ->setCrossAxisLineAlignment(AxisAlignment::Start)
     );
     actionButtonMenu->setAnchorPoint({0.0f,0.0f});
-    actionButtonMenu->setPosition({padAmount,padAmount+1.5f});
+    actionButtonMenu->setPosition({padAmount,padAmount});
     actionButtonMenu->setScale(0.5f);
 
+    //this one just works whenever
     auto createSetupButton = CCMenuItemSpriteExtra::create(
         ButtonSprite::create("Create Parallax Setup"),
         this,
         menu_selector(ParallaxMenuPopup::onCreateSetupButton)
     );
+    //these two work on the current setup
     auto cleanTriggersButton = CCMenuItemSpriteExtra::create(
         ButtonSprite::create("Clean up Triggers"),
         this,
         menu_selector(ParallaxMenuPopup::onCleanupTriggersButton)
     );
+    auto findSetupInEditorButton = CCMenuItemSpriteExtra::create(
+        ButtonSprite::create("Find in Editor"),
+        this,
+        menu_selector(ParallaxMenuPopup::onFindSetupInEditorButton)
+    );
 
+
+    
     actionButtonMenu->addChild(createSetupButton);
+    
     actionButtonMenu->addChild(cleanTriggersButton);
+    actionButtonMenu->addChild(findSetupInEditorButton);
+
     actionButtonMenu->updateLayout();
     
     m_mainLayer->addChild(actionButtonMenu);
+
+    //add a label for the layer list
+    m_layerListHint = Label::create("","bigFont.fnt");
+    m_mainLayer->addChild(m_layerListHint);
+    m_layerListHint->setPosition(popupWidth-(padAmount*1.25f)-layerListWidth+(m_layerListScrollBar->getPositionX()/2),padAmount+(layerListHeight/2));
+    m_layerListHint->setScale(0.3f);
+    m_layerListHint->setColor(constants::ui::disabledColor);
+    m_layerListHint->setOpacity(constants::ui::disabledAlpha);
+
+    updateAllUI();
 
     updateLayout();
 
     return true;
 }
 
+void ParallaxMenuPopup::updateAddLayerButton()
+{
+
+    auto setup = getSelectedSetup();
+    if(setup){
+        m_addLayerButton->setEnabled(true);
+        m_addLayerButton->setColor(ccColor3B{255,255,255});
+        m_addLayerButton->setOpacity(255);
+    }else{
+        m_addLayerButton->setEnabled(false);
+        m_addLayerButton->setColor(constants::ui::disabledColor);
+        m_addLayerButton->setOpacity(constants::ui::disabledAlpha);
+    }
+}
+
+void ParallaxMenuPopup::updateLayerListHint()
+{
+    auto setup = getSelectedSetup();
+    if(setup){
+        if(setup->m_layers.empty()){
+            m_layerListHint->setVisible(true);
+            m_layerListHint->setText("(Press add to create layers)");
+        }else{
+            m_layerListHint->setVisible(false);
+        }
+    }else{
+        m_layerListHint->setVisible(true);
+        m_layerListHint->setText("(Create a setup to add layers)");
+    }
+}
+
 //TODO: clean this up
-//to avoid build issues on android this needs to be a variable to use with nextFreeGroupID
+//to avoid explicit in copy-initialization build issues on android create a set of empty groups for finding a group ID like this
+//this could be replaced with nwo api editor::nextFreeGroup(); however that doesnt update if i give the group to an object
 const gd::unordered_set<int> noExcludeGroups{};
 
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
@@ -205,12 +237,12 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
 
     auto setup = getSelectedSetup();
     if(!setup) return;
-    //TODO: make a system for finding where to place the new layer triggers
-    //possibly just locate the highest (or lowest depending on direction setting maybe) existing trigger and place it above or below
+
+    auto newTriggersPosition = setup->getPositionForNewLayerTriggers();
 
     //first add the triggers
-    auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(objectID::FOLLOW_TRIGGER,{0.0f,0.0f},false));
-    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(objectID::SCALE_TRIGGER,{editorTileSize,0.0f},false));
+    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(constants::objectID::SCALE_TRIGGER,newTriggersPosition,false));
+    auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(constants::objectID::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
     //give them the correct groups
     int newLayerGroupID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
     //set the target gid
@@ -227,11 +259,9 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     newFollowTrigger->m_duration = defaultFollowDuration;
     
     //create a new layer object
-    auto newLayer = &setup->m_layers.emplace_back();
-    newLayer->m_layerID = newLayerGroupID;
-    newLayer->m_followTriggerPtr = newFollowTrigger;
-    newLayer->m_scaleTriggerPtr = newScaleTrigger;
-    newLayer->setTriggerValuesByDepth(0.0f);//this also sets the layer depth
+    auto newLayer = setup->addLayer(newScaleTrigger,newFollowTrigger);
+    newLayer->setTriggerValuesByDepth(0.0f);
+
     //next add it to the ui
     addLayerNodeToList(newLayer);
     m_layerListNode->updateLayout();
@@ -240,6 +270,8 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     //update the group id
     LevelEditorLayer::updateObjectLabel(newScaleTrigger);
     LevelEditorLayer::updateObjectLabel(newFollowTrigger);
+
+    updateAllUI();
 }
 void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
 {
@@ -252,23 +284,39 @@ void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
     auto basePosition = setup->m_areaMoveTriggerPtr->getPosition();
     //use the area move as the base
     //the follow trigger goes next to the area move trigger
-    m_editorUI->setObjectPosition(setup->m_advancedFollowTriggerPtr,{basePosition.x+editorTileSize,basePosition.y});
+    editor::object::move(setup->m_advancedFollowTriggerPtr,{basePosition.x+editor::constants::GRID_SIZE,basePosition.y});
 
     //for now just go through all the layers (maybe sort them later though)
     float y = basePosition.y;
     for(auto& layer : setup->m_layers){
-        y+=editorTileSize;
+        y+=editor::constants::GRID_SIZE;
 
-        m_editorUI->setObjectPosition(layer.m_scaleTriggerPtr,{basePosition.x,y});
-        m_editorUI->setObjectPosition(layer.m_followTriggerPtr,{basePosition.x+editorTileSize,y});
+        editor::object::move(layer.m_scaleTriggerPtr,{basePosition.x,y});
+        editor::object::move(layer.m_followTriggerPtr,{basePosition.x+editor::constants::GRID_SIZE,y});
     }
 
 }
+
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
 {
+    auto newSetupPos = editor::center();
+    //snap to the grid
+    //maybe make this optional later
+    newSetupPos.x = (floor(newSetupPos.x/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE;
+    newSetupPos.y = (floor(newSetupPos.y/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE;
+
     //first create the area move triggre
-    auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(m_editorLayer->createObject(objectID::AREA_MOVE_TRIGGER,{0.0f,0.0f},false));
-    auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(m_editorLayer->createObject(objectID::ADVANCED_FOLLOW_TRIGGER,{editorTileSize,0.0f},false));
+    auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(m_editorLayer->createObject(
+        constants::objectID::AREA_MOVE_TRIGGER,
+        newSetupPos+CCPoint{0.0f,0.0f},
+        false
+    ));
+    auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(m_editorLayer->createObject(
+        constants::objectID::ADVANCED_FOLLOW_TRIGGER,
+        newSetupPos+CCPoint{editor::constants::GRID_SIZE,0.0f},
+        false
+    ));
+
     //setup the area move trigger
     newAreaMoveTrigger->m_specialTarget = -3;//target c
     newAreaMoveTrigger->m_length = 9000;
@@ -289,30 +337,43 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     //these can be any object so im making them look like a gd icon cuz its cute ig
     constexpr int rootObjectID = 3816;//icon face particle
     constexpr int followObjectID = 3805;//hollow square particle
-    auto rootObject = m_editorLayer->createObject(rootObjectID,{0.0f,-editorTileSize},false);
-    auto followObject = m_editorLayer->createObject(followObjectID,{0.0f,-editorTileSize},false);
+    auto rootObject = m_editorLayer->createObject(
+        rootObjectID,
+        newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
+        false
+    );
+    auto followObject = m_editorLayer->createObject(
+        followObjectID,
+        newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
+        false
+    );
+
     rootObject->addToGroup(rootID);
     followObject->addToGroup(followID);
-    //for some reason you need to do both of these or it wont work
-    //this is just visual anyway
-    //rootObject->m_scaleX=0.5;
-    //rootObject->m_scaleY=0.5;
-    //rootObject->setScale(0.5f);
-    rootObject->updateCustomScaleX(0.5);
-    rootObject->updateCustomScaleY(0.5);
-    
 
-    //probably update the ui here now
+    editor::object::scale(rootObject,0.5);
+    //add the new setup to the list
+    m_parallaxSetupList.addSetup(newAreaMoveTrigger,newAdvancedFollowTrigger);
+    updateAllUI();
 }
-ParallaxMenuPopup *ParallaxMenuPopup::create(LevelEditorLayer *editor,MyEditorUI* editorUI)
+
+void ParallaxMenuPopup::onFindSetupInEditorButton(CCObject *)
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    auto setupPosition = setup->m_areaMoveTriggerPtr->getPosition();
+    editor::move(setupPosition);
+}
+ParallaxMenuPopup *ParallaxMenuPopup::create(MyEditorUI *editorUI)
 {
     auto ret = new ParallaxMenuPopup();
-    if (ret->init(editor,editorUI)) {
+    if (ret->init(editorUI)) {
         ret->autorelease();
         return ret;
     }
     delete ret;
-    return nullptr;
+    return nullptr; 
 }
 ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
 {
@@ -320,7 +381,12 @@ ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
     if(m_parallaxSetupList.m_setups.empty()) return nullptr;
     else return &m_parallaxSetupList.m_setups[0];
 }
-void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer * layer)
+void ParallaxMenuPopup::updateAllUI()
+{
+    updateAddLayerButton();
+    updateLayerListHint();
+}
+void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
 {
     auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,40},layer);
     m_layerListNode->addChild(layerNode);
