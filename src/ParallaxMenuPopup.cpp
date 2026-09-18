@@ -19,7 +19,8 @@ constexpr float layerListX = popupWidth-padAmount;
 
 void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 {
-    m_layerListNode->removeAllChildren();
+    m_layerListNode->removeAllChildrenWithCleanup(true);
+
     if(setup){
         auto sortedLayers = setup->sortDepth();
         for(auto layerPtr : sortedLayers){
@@ -31,6 +32,44 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
     m_layerListNode->updateLayout();
     m_scrollLayer->updateLayout();
     m_layerListBackground->updateLayout();
+}
+
+void ParallaxMenuPopup::init_createSetupSwitcher()
+{
+    //create the setup swticher (maybe make this a custom node later?)
+    const float setupSwitcherWidth = 90;
+    const float setupSwitcherHeight = 20;
+    const float setupSwitcherButtonScale = 0.8f;
+    auto setupSwitcherMenu = CCMenu::create();
+    setupSwitcherMenu->setPosition({padAmount,popupHeight-padAmount-setupSwitcherHeight});
+    setupSwitcherMenu->setScale(0.8f);
+
+    setupSwitcherMenu->setContentSize({setupSwitcherWidth,setupSwitcherHeight});
+    m_setupSwitcherPrevButton = Button::createWithSpriteFrameName("GJ_arrow_01_001.png", [this](Button*) {
+        m_selectedSetupIndex--;
+        this->loadSetupLayerList(getSelectedSetup());
+        this->updateAllUI();
+    });
+    m_setupSwitcherNextButton = Button::createWithSpriteFrameName("GJ_arrow_01_001.png", [this](Button*) {
+        m_selectedSetupIndex++;
+        this->loadSetupLayerList(getSelectedSetup());
+        this->updateAllUI();
+	});
+    auto nextButtonSprite = m_setupSwitcherNextButton->getChildByType<CCSprite>();
+    nextButtonSprite->setFlipX(true);
+
+    m_setupSwitcherPrevButton->setPosition({0.0,setupSwitcherHeight/2});
+    m_setupSwitcherNextButton->setPosition({setupSwitcherWidth,setupSwitcherHeight/2});
+    m_setupSwitcherPrevButton->setScale(setupSwitcherButtonScale);
+    m_setupSwitcherNextButton->setScale(setupSwitcherButtonScale);
+    setupSwitcherMenu->addChild(m_setupSwitcherPrevButton);
+    setupSwitcherMenu->addChild(m_setupSwitcherNextButton);
+
+    m_setupSelectorLabel = Label::create("","bigFont.fnt");
+    setupSwitcherMenu->addChild(m_setupSelectorLabel);
+    m_setupSelectorLabel->setPosition({setupSwitcherWidth/2,setupSwitcherHeight/2});
+
+    m_mainLayer->addChild(setupSwitcherMenu);
 }
 
 //todo: clean up this init ui function
@@ -169,12 +208,16 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         menu_selector(ParallaxMenuPopup::onFindSetupInEditorButton)
     );
 
+    auto stupidLabel = Label::create("TEMPORARY DEV BUTTONS","goldFont.fnt");
 
     
     actionButtonMenu->addChild(createSetupButton);
     
     actionButtonMenu->addChild(cleanTriggersButton);
     actionButtonMenu->addChild(findSetupInEditorButton);
+
+
+    actionButtonMenu->addChild(stupidLabel);
 
     actionButtonMenu->updateLayout();
     
@@ -188,25 +231,36 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_layerListHint->setColor(constants::ui::disabledColor);
     m_layerListHint->setOpacity(constants::ui::disabledAlpha);
 
-    updateAllUI();
 
+    init_createSetupSwitcher();
+
+    updateAllUI();
     updateLayout();
 
     return true;
 }
 
+//idk where else to put this function
+template <typename T>
+void enableNode(T* item){
+    item->setEnabled(true);
+    item->setColor(ccColor3B{255,255,255});
+    item->setOpacity(255);
+}
+template <typename T>
+void disableNode(T* item){
+    item->setEnabled(false);
+    item->setColor(constants::ui::disabledColor);
+    item->setOpacity(constants::ui::disabledAlpha);
+}
+
 void ParallaxMenuPopup::updateAddLayerButton()
 {
-
     auto setup = getSelectedSetup();
     if(setup){
-        m_addLayerButton->setEnabled(true);
-        m_addLayerButton->setColor(ccColor3B{255,255,255});
-        m_addLayerButton->setOpacity(255);
+        enableNode(m_addLayerButton);
     }else{
-        m_addLayerButton->setEnabled(false);
-        m_addLayerButton->setColor(constants::ui::disabledColor);
-        m_addLayerButton->setOpacity(constants::ui::disabledAlpha);
+        disableNode(m_addLayerButton);
     }
 }
 
@@ -224,6 +278,23 @@ void ParallaxMenuPopup::updateLayerListHint()
         m_layerListHint->setVisible(true);
         m_layerListHint->setText("(Create a setup to add layers)");
     }
+}
+
+void ParallaxMenuPopup::updateSetupSelector()
+{    
+    //exit if there is no setup selector
+    if(!m_setupSelectorLabel) return;
+
+    bool enablePrev = m_selectedSetupIndex>0;
+    bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList.m_setups.size());
+
+    if(enablePrev) enableNode(m_setupSwitcherPrevButton);
+    else disableNode(m_setupSwitcherPrevButton);
+
+    if(enableNext) enableNode(m_setupSwitcherNextButton);
+    else disableNode(m_setupSwitcherNextButton);
+    
+    m_setupSelectorLabel->setText(fmt::format("{}/{}",m_selectedSetupIndex+1,m_parallaxSetupList.m_setups.size()));
 }
 
 //TODO: clean this up
@@ -377,14 +448,16 @@ ParallaxMenuPopup *ParallaxMenuPopup::create(MyEditorUI *editorUI)
 }
 ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
 {
-    //for now just use the 0th one
-    if(m_parallaxSetupList.m_setups.empty()) return nullptr;
-    else return &m_parallaxSetupList.m_setups[0];
+    //if m_selectedSetupIndex is changed to be an unsigned int later the less than zero check isnt needed
+    if(m_selectedSetupIndex<0) return nullptr;
+    if(m_selectedSetupIndex>=m_parallaxSetupList.m_setups.size()) return nullptr;
+    return &m_parallaxSetupList.m_setups[m_selectedSetupIndex];
 }
 void ParallaxMenuPopup::updateAllUI()
 {
     updateAddLayerButton();
     updateLayerListHint();
+    updateSetupSelector();
 }
 void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
 {

@@ -18,6 +18,7 @@ public:
     void updateAllUI();
 protected:
     bool init(MyEditorUI* editorUI);
+    void init_createSetupSwitcher();
 
     void loadSetupLayerList(ParallaxSetup* setup);
 
@@ -37,9 +38,16 @@ protected:
     AdvancedScrollLayer* m_scrollLayer = nullptr;
     AdvancedScrollBar* m_layerListScrollBar = nullptr;
 
+    Button* m_setupSwitcherPrevButton = nullptr;
+    Button* m_setupSwitcherNextButton = nullptr;
+    Label* m_setupSelectorLabel = nullptr;
+
     CCMenuItemSpriteExtra* m_addLayerButton = nullptr;
     Label* m_layerListHint = nullptr;
+
+    int m_selectedSetupIndex = 0;
 private:
     void updateAddLayerButton();
     void updateLayerListHint();
+    void updateSetupSelector();
 };

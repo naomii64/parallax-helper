@@ -158,11 +158,12 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::getLayerPointerList()
     
 	return layerPointers;
 }
+
 std::vector<ParallaxSetupLayer *> ParallaxSetup::sortDepth()
 {
 	auto ret = getLayerPointerList();
 
-    std::sort(ret.begin(), ret.end(),
+    std::ranges::sort(ret,
         [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
             return a->m_layerDepth < b->m_layerDepth;
         }
@@ -170,12 +171,11 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortDepth()
 
 	return ret;
 }
-
 std::vector<ParallaxSetupLayer *> ParallaxSetup::sortGroupID()
 {
 	auto ret = getLayerPointerList();
 
-    std::sort(ret.begin(), ret.end(),
+    std::ranges::sort(ret,
         [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
             return a->m_layerID < b->m_layerID;
         }

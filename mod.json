@@ -22,6 +22,20 @@
 		]
 	},
 	"settings": {
-		
+		"depth-label-color-default": {
+			"type": "rgb",
+			"name": "Default Depth Color",
+			"default": [255,255,255]
+		},
+		"depth-label-color-negative": {
+			"type": "rgb",	
+			"name": "Negative Depth Color",
+			"default": [170,215,255]
+		},
+		"depth-label-color-positive": {
+			"type": "rgb",
+			"name": "Positive Depth Color",
+			"default": [255,170,170]
+		}
 	}
 }

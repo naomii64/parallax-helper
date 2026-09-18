@@ -93,10 +93,10 @@ void ParallaxMenuLayerNode::updateDepthLabelColor()
 {
     if(!m_depthLabel) return;
     if(!m_depthInput) return;
-    //maybe make these customizable in settings later
-    const ccColor3B tintDefault = {255,255,255};
-    const ccColor3B tintPositive = {255,170,170};
-    const ccColor3B tintNegative = {170,215,255};
+    //this probably doesnt need to be gotten from the mod for EVERY update
+    const ccColor3B tintDefault = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-default");
+    const ccColor3B tintPositive = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-positive");
+    const ccColor3B tintNegative = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-negative");
 
     std::string depthInputString = m_depthInput->getString();
     auto depthResult = geode::utils::numFromString<float>(depthInputString);
