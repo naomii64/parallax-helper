@@ -31,6 +31,7 @@ public:
 
     float getDuration() const;
     gd::string getDurationString() const;
+    size_t getLayerCount() const;
 
     void setDuration(float duration);
 

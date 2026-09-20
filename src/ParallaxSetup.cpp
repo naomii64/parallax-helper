@@ -165,7 +165,7 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortDepth()
 
     std::ranges::sort(ret,
         [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
-            return a->getDepth() < b->getDepth();
+            return a->getDepth() > b->getDepth();
         }
     );
 
@@ -177,7 +177,7 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortGroupID()
 
     std::ranges::sort(ret,
         [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
-            return a->m_layerID < b->m_layerID;
+            return a->m_layerID > b->m_layerID;
         }
     );
 
@@ -190,7 +190,7 @@ float scaleFromDepth(float depth){
 
 //function that returns "mixed" if a float is nan but just the number if otherwise
 gd::string nanIsMixed(float input){
-    return (std::isnan(input) ? gd::string("Mixed") : fmt::to_string(input));
+    return gd::string(std::isnan(input) ? "Mixed" : fmt::to_string(input));
 }
 float ParallaxSetupLayer::getDepth() const
 {
@@ -223,6 +223,11 @@ float ParallaxSetup::getDuration() const
 gd::string ParallaxSetup::getDurationString() const
 {
 	return nanIsMixed(getDuration());
+}
+
+size_t ParallaxSetup::getLayerCount() const
+{
+    return m_layers.size();
 }
 
 void ParallaxSetup::setDuration(float duration)

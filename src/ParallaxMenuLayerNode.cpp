@@ -1,5 +1,5 @@
 #include "ParallaxMenuLayerNode.hpp"
-
+#include "CustomNumberInput.hpp"
 
 bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer* layer)
 {
@@ -10,8 +10,7 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     constexpr float depthInputWidth = 70.0f;
     constexpr float padDepthLabel = 2.0f;
 
-    m_depthInput = TextInput::create(depthInputWidth,"Num");
-    m_depthInput->setCommonFilter(CommonFilter::Float);
+    m_depthInput = CustomNumberInput::create(depthInputWidth);
 
     m_depthInput->setCallback([this](const std::string&){
         //calls whenever the text is changed
@@ -34,7 +33,7 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     m_depthInput->setPosition({size.width,size.height/2});
 
     addChild(m_depthInput);
-    
+
     //add the depth
     m_depthLabel = Label::create("Depth:","bigFont.fnt");
     m_depthLabel->setAnchorPoint({1.0f,0.5f});
@@ -91,6 +90,20 @@ void ParallaxMenuLayerNode::setLayer(ParallaxSetupLayer *layer)
     updateDepthLabelColor();
 }
 
+void ParallaxMenuLayerNode::defocus()
+{
+    m_depthInput->defocus();
+}
+void ParallaxMenuLayerNode::focus()
+{
+    m_depthInput->focus();
+}
+
+bool ParallaxMenuLayerNode::getFocused()
+{
+    return m_depthInput->getInputNode()->m_selected;
+}
+
 void ParallaxMenuLayerNode::updateDepthLabelColor()
 {
     if(!m_depthLabel) return;
@@ -131,3 +144,4 @@ ParallaxMenuLayerNode* ParallaxMenuLayerNode::create(const cocos2d::CCSize &size
     delete ret;
     return nullptr;
 };
+

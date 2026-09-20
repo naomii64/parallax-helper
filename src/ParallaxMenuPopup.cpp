@@ -17,16 +17,33 @@ constexpr float layerListHeight = 240.0f;
 
 constexpr float layerListX = popupWidth-padAmount;
 
+constexpr float LAYER_NODE_HEIGHT = 40.0f;
+constexpr float LAYER_LIST_SCROLL_LAYER_HEIGHT = 260.0f;
+//idk where else to put this function
+template <typename T>
+void enableNode(T* item){
+    item->setEnabled(true);
+    item->setColor(ccWHITE);
+    item->setOpacity(255);
+}
+template <typename T>
+void disableNode(T* item){
+    item->setEnabled(false);
+    item->setColor(constants::ui::disabledColor);
+    item->setOpacity(constants::ui::disabledAlpha);
+}
+
 void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 {
-    //m_layerListMenu->removeAllChildrenWithCleanup(true);
 
     //reset the nodes because we cant just delete them apparently
     m_nextLayerListNode = 0;
     auto nodes = m_layerListMenu->getChildrenExt();
-    for(auto node : nodes)
-        node->setVisible(false);
-
+    for(auto node : nodes){
+        auto layerNode = static_cast<ParallaxMenuLayerNode*>(node);
+        layerNode->setVisible(false);
+        layerNode->defocus();
+    }
 
     if(setup){
         auto sortedLayers = setup->sortDepth();
@@ -44,9 +61,9 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 void ParallaxMenuPopup::init_createSetupSwitcher()
 {
     //create the setup swticher (maybe make this a custom node later?)
-    const float setupSwitcherWidth = 90;
-    const float setupSwitcherHeight = 20;
-    const float setupSwitcherButtonScale = 0.8f;
+    constexpr float setupSwitcherWidth = 90;
+    constexpr float setupSwitcherHeight = 20;
+    constexpr float setupSwitcherButtonScale = 0.8f;
     auto setupSwitcherMenu = CCMenu::create();
     setupSwitcherMenu->setPosition({padAmount,popupHeight-padAmount-setupSwitcherHeight});
     setupSwitcherMenu->setScale(0.8f);
@@ -79,6 +96,8 @@ void ParallaxMenuPopup::init_createSetupSwitcher()
     m_mainLayer->addChild(setupSwitcherMenu);
 }
 
+#include "CustomNumberInput.hpp"
+
 //todo: clean up this init ui function
 bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 {
@@ -110,10 +129,11 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         AxisLayout::create(Axis::Column)
         ->setAutoGrowAxis({0.0f})
         ->setGap(0.0f)
+        ->setAxisReverse(true)//so 0 is at the top
     );
     //setup a scroll layer to make it scrollable
     //this is where the size of the entire scrolling box thing is adjusted
-    m_scrollLayer = AdvancedScrollLayer::create({layerListWidth,260});
+    m_scrollLayer = AdvancedScrollLayer::create({layerListWidth,LAYER_LIST_SCROLL_LAYER_HEIGHT});
     m_scrollLayer->setAnchorPoint({0.0f,0.0f});
     m_scrollLayer->setLayout(AxisLayout::create());
 
@@ -147,6 +167,8 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         this, 
         nullptr
     );
+    disableNode(sortButton);//disable this cuz its not implemented yet
+
     sortMenu->addChild(sortButton);
     sortMenu->updateLayout();
     m_mainLayer->addChild(sortMenu);
@@ -241,13 +263,7 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     auto durationInputMenu = CCMenu::create();
     m_mainLayer->addChild(durationInputMenu);
 
-    m_durationInput = TextInput::create(100.0f,"Num");
-    m_durationInput->setCommonFilter(CommonFilter::Float);
-
-    auto textInputNode = m_durationInput->getInputNode();
-    textInputNode->m_numberInput = true;//clear non numeric
-    textInputNode->m_placeholderColor = ccColor3B{120,170,240};//copy the color robtob uses
-    textInputNode->setString("");//updates the placeholder color
+    m_durationInput = CustomNumberInput::create(100.0f);
 
     auto durationInputLabel = Label::create("Duration:","bigFont.fnt");
         
@@ -292,6 +308,20 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     updateAllUI();
     updateLayout();
 
+    //the inputs
+    m_upListener = listenForKeybindSettingPresses("keybind-layerlist-up", [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+        if (down && !repeat) {
+            //FLAlertLayer::create(":3","up","ok?")->show();
+            this->changeFocusedLayer(-1);
+        }
+    });
+	m_downListener = listenForKeybindSettingPresses("keybind-layerlist-down", [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+        if (down && !repeat) {
+            //FLAlertLayer::create(":3","down","ok?")->show();
+            this->changeFocusedLayer(1);
+        }
+    });
+
     return true;
 }
 void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *){
@@ -299,19 +329,6 @@ void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *){
     if(!setup) return;
     m_durationInput->setString("-1");
     setup->setDuration(-1.0f);
-}
-//idk where else to put this function
-template <typename T>
-void enableNode(T* item){
-    item->setEnabled(true);
-    item->setColor(ccWHITE);
-    item->setOpacity(255);
-}
-template <typename T>
-void disableNode(T* item){
-    item->setEnabled(false);
-    item->setColor(constants::ui::disabledColor);
-    item->setOpacity(constants::ui::disabledAlpha);
 }
 
 void ParallaxMenuPopup::updateAddLayerButton()
@@ -437,6 +454,15 @@ void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
         editor::object::move(layer.m_followTriggerPtr,{basePosition.x+editor::constants::GRID_SIZE,y});
     }
 
+    //move the objects below the move trigger
+    //there should only be 1 of each but this wont account for that yet
+    auto rootFollowObjPos = basePosition-CCPoint{0.0f,editor::constants::GRID_SIZE};
+
+    auto rootObjs = editor::object::getWithGroup(setup->m_rootID);
+    auto followObjs = editor::object::getWithGroup(setup->m_followID);
+
+    for(auto obj : CCArrayExt<GameObject*>(rootObjs)) editor::object::move(obj,rootFollowObjPos);
+    for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::move(obj,rootFollowObjPos);
 }
 
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
@@ -522,6 +548,26 @@ ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
     if(m_selectedSetupIndex>=m_parallaxSetupList.m_setups.size()) return nullptr;
     return &m_parallaxSetupList.m_setups[m_selectedSetupIndex];
 }
+void ParallaxMenuPopup::scrollToLayerIndex(int index)
+{
+    float targetY = LAYER_NODE_HEIGHT*float(index);
+    //offset it to be the middle of the node
+    targetY+=LAYER_NODE_HEIGHT/2.0f;
+    //offset to be in the middle of the list
+    targetY-=LAYER_LIST_SCROLL_LAYER_HEIGHT/2.0f;
+
+    m_scrollLayer->setScrollY(targetY,true);
+}
+ParallaxMenuPopup::~ParallaxMenuPopup()
+{
+    Popup::~Popup();
+
+    if(m_upListener)
+        m_upListener->destroy();
+	
+    if(m_downListener)
+        m_downListener->destroy();
+}
 void ParallaxMenuPopup::updateAllUI()
 {
     updateAddLayerButton();
@@ -536,7 +582,7 @@ void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
     auto existingLayers = m_layerListMenu->getChildrenExt();
 
     if (m_nextLayerListNode >= existingLayers.size()){
-        auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,40},layer);
+        auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,LAYER_NODE_HEIGHT},layer);
         m_layerListMenu->addChild(layerNode);
     }else{
         auto layerNode = static_cast<ParallaxMenuLayerNode*>(existingLayers[m_nextLayerListNode]);
@@ -547,3 +593,50 @@ void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
     m_nextLayerListNode++;
 }
 
+size_t ParallaxMenuPopup::getFocusedLayer()
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return SIZE_MAX;
+
+    auto existingLayers = m_layerListMenu->getChildrenExt();
+    //first get the focused layer
+    for(size_t i=0;i<setup->getLayerCount();i++){
+        auto layerNode = static_cast<ParallaxMenuLayerNode*>(existingLayers[i]);
+        //FLAlertLayer::create(":3",fmt::format("{}",layerNode->getFocused()),"ok?")->show();
+        if(layerNode->getFocused()) return i;
+    }
+
+    return SIZE_MAX;
+}
+
+void ParallaxMenuPopup::changeFocusedLayer(int indexOffset)
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    size_t focusedLayer = getFocusedLayer();
+    if(focusedLayer==SIZE_MAX) return;//if there is no focused layer
+
+    size_t targetLayer = focusedLayer;
+    //for now only support +1 and -1 cuz unsigned means i cant use negative numbers
+    if(indexOffset<0){
+        //-1
+        if(focusedLayer==0){
+            targetLayer = setup->getLayerCount()-1;
+        }else{
+            targetLayer--;
+        }
+    }else{
+        //+1
+        targetLayer++;
+        if(targetLayer>=setup->getLayerCount()){
+            targetLayer=0;
+        }
+    }
+
+    auto existingLayers = m_layerListMenu->getChildrenExt();
+    static_cast<ParallaxMenuLayerNode*>(existingLayers[targetLayer])->focus();
+
+    //now uhh scroll to it
+    scrollToLayerIndex(targetLayer);
+}

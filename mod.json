@@ -36,6 +36,22 @@
 			"type": "rgb",
 			"name": "Positive Depth Color",
 			"default": [255,170,170]
+		},
+
+
+		"keybind-layerlist-up": {
+			"type":"keybind",
+			"name":"Up Layer List",
+			"default":["Up"],
+			"category": "editor",
+			"allow-in-text-inputs":true
+		},
+		"keybind-layerlist-down": {
+			"type":"keybind",
+			"name":"Down layer List",
+			"default":["Down"],
+			"category": "editor",
+			"allow-in-text-inputs":true
 		}
 	}
 }

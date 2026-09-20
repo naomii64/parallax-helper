@@ -14,7 +14,9 @@ public:
     static ParallaxMenuPopup* create(MyEditorUI* editorUI);
 
     ParallaxSetup* getSelectedSetup();
-
+    void scrollToLayerIndex(int index);
+    
+    ~ParallaxMenuPopup();
 protected:
     bool init(MyEditorUI* editorUI);
     void init_createSetupSwitcher();
@@ -31,7 +33,8 @@ protected:
     //layer list methods
     void loadSetupLayerList(ParallaxSetup* setup);
     void addLayerNodeToList(ParallaxSetupLayer* layer);//node: this does NOT update the layout
-
+    size_t getFocusedLayer();//returns SIZE_MAX if no layer is selected
+    void changeFocusedLayer(int indexOffset);
 
     ParallaxSetupList m_parallaxSetupList;
 
@@ -58,6 +61,9 @@ protected:
 
     //allows for reuse of nodes to avoid crashes when deleting them
     int m_nextLayerListNode = 0;
+
+    ListenerHandle* m_upListener = nullptr;
+    ListenerHandle* m_downListener = nullptr;
 private:
     void updateAllUI();
 
