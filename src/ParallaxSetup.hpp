@@ -6,8 +6,15 @@ using namespace geode::prelude;
 class ParallaxSetupLayer {
 public:
     int m_layerID = 0;
-    float m_layerDepth = 0.0f;
     
+    //the depth will no longer be stored here
+    //float m_layerDepth = 0.0f;
+    float getDepth() const;
+    gd::string getDepthString() const;
+
+    float getDuration() const;
+    void setDuration(float duration);
+
     TransformTriggerGameObject* m_scaleTriggerPtr = nullptr;
     EffectGameObject* m_followTriggerPtr = nullptr;
 
@@ -21,6 +28,11 @@ public:
     int m_rootID = 0;//the group the area move trigger targets
     int m_followID = 0;//the group the layers of the parallax follow
     std::deque<ParallaxSetupLayer> m_layers;
+
+    float getDuration() const;
+    gd::string getDurationString() const;
+
+    void setDuration(float duration);
 
     EnterEffectObject* m_areaMoveTriggerPtr = nullptr;
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;

@@ -5,10 +5,6 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 {
     if(!CCMenu::init()) return false;
 
-    //placeholder test values
-    int groupID = layer->m_layerID;
-    float depth = layer->m_layerDepth;
-
     setContentSize(size);
 
     constexpr float depthInputWidth = 70.0f;
@@ -16,9 +12,6 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 
     m_depthInput = TextInput::create(depthInputWidth,"Num");
     m_depthInput->setCommonFilter(CommonFilter::Float);
-
-    //store a pointer to the layer
-    m_layerPtr = layer;
 
     m_depthInput->setCallback([this](const std::string&){
         //calls whenever the text is changed
@@ -39,10 +32,9 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     //move it to the side middle
     m_depthInput->setAnchorPoint({1.0f,0.5f});
     m_depthInput->setPosition({size.width,size.height/2});
-    
-    m_depthInput->setString(fmt::to_string(depth));
 
     addChild(m_depthInput);
+    
     //add the depth
     m_depthLabel = Label::create("Depth:","bigFont.fnt");
     m_depthLabel->setAnchorPoint({1.0f,0.5f});
@@ -74,19 +66,29 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     addChild(layerGroupIDBackground);
 
     //now add the text on top of it
-    auto layerGroupIDLabel = Label::create(fmt::to_string(groupID),"bigFont.fnt");
+    m_layerGroupIDLabel = Label::create("","bigFont.fnt");
     auto layerGroupBGSize = layerGroupIDBackground->getContentSize();
-    layerGroupIDLabel->setPosition(layerGroupBGSize/2.0f); //put it in the middle   
-    layerGroupIDLabel->setScale(0.45f);//scale the label
+    m_layerGroupIDLabel->setPosition(layerGroupBGSize/2.0f); //put it in the middle   
+    m_layerGroupIDLabel->setScale(0.45f);//scale the label
 
-    layerGroupIDBackground->addChild(layerGroupIDLabel);    
+    layerGroupIDBackground->addChild(m_layerGroupIDLabel);    
     layerGroupIDBackground->updateLayout();
     updateLayout();
 
-    //update the labels color
-    updateDepthLabelColor();
+    setLayer(layer);
 
     return true;
+}
+
+void ParallaxMenuLayerNode::setLayer(ParallaxSetupLayer *layer)
+{
+    int groupID = layer->m_layerID;
+    m_layerGroupIDLabel->setText(fmt::to_string(groupID));
+
+    m_layerPtr = layer;
+    m_depthInput->setString(layer->getDepthString());
+
+    updateDepthLabelColor();
 }
 
 void ParallaxMenuLayerNode::updateDepthLabelColor()

@@ -25,7 +25,7 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 	for (auto& obj : CCArrayExt<GameObject*>(allObjects)){
 		if(!obj->m_isTrigger) continue;//this loop only cares about triggers anyway
 
-			if(obj->m_objectID == constants::objectID::AREA_MOVE_TRIGGER){
+			if(obj->m_objectID == trigger::AREA_MOVE_TRIGGER){
 				auto ego = static_cast<EnterEffectObject*>(obj);
 						
 				//it might be faster to move these checks somewhere else later
@@ -46,7 +46,7 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 				areaMoveTriggersByTargetGID[ego->m_targetGroupID] = ego;//save the root to the map
 					
 		}
-		else if(obj->m_objectID == constants::objectID::ADVANCED_FOLLOW_TRIGGER){
+		else if(obj->m_objectID == trigger::ADVANCED_FOLLOW_TRIGGER){
 			auto ego = static_cast<AdvancedFollowTriggerObject*>(obj);
 			//add some filters here later
 			//probably based on whatever the "add" checkbox means
@@ -55,11 +55,11 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 			advancedFollowTriggersByTargetGID[ego->m_targetGroupID] = ego;
 		}
 		//the follow and scale triggers
-		else if(obj->m_objectID == constants::objectID::FOLLOW_TRIGGER){
+		else if(obj->m_objectID == trigger::FOLLOW_TRIGGER){
 			auto ego = static_cast<EffectGameObject*>(obj);
 			followTriggersByTargetGID[ego->m_targetGroupID] = ego;
 		}
-		else if(obj->m_objectID == constants::objectID::SCALE_TRIGGER){
+		else if(obj->m_objectID == trigger::SCALE_TRIGGER){
 			auto ego = static_cast<TransformTriggerGameObject*>(obj);
 			scaleTriggersByTargetGID[ego->m_targetGroupID] = ego;
 		}
@@ -107,29 +107,29 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 		parallaxSetup->addLayer(scaleTrigger,followTrigger);
 	}
 }
-ParallaxSetup* ParallaxSetupList::addSetup(EnterEffectObject* p_areaMoveTrigger,AdvancedFollowTriggerObject* p_advancedFollowTrigger){
+ParallaxSetup* ParallaxSetupList::addSetup(EnterEffectObject* areaMoveTrigger,AdvancedFollowTriggerObject* advancedFollowTrigger){
 	auto& newSetup = m_setups.emplace_back();
 
-	newSetup.m_areaMoveTriggerPtr = p_areaMoveTrigger;
-	newSetup.m_advancedFollowTriggerPtr = p_advancedFollowTrigger;
+	newSetup.m_areaMoveTriggerPtr = areaMoveTrigger;
+	newSetup.m_advancedFollowTriggerPtr = advancedFollowTrigger;
 
-	newSetup.m_rootID = p_areaMoveTrigger->m_targetGroupID;
-	newSetup.m_followID = p_advancedFollowTrigger->m_targetGroupID;
+	newSetup.m_rootID = areaMoveTrigger->m_targetGroupID;
+	newSetup.m_followID = advancedFollowTrigger->m_targetGroupID;
 
 	return &newSetup;
 }
 
 
-ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *p_scaleTrigger, EffectGameObject *p_followTrigger)
+ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTrigger, EffectGameObject *followTrigger)
 {
 	auto& newLayer = m_layers.emplace_back();
-	int layerGroupID = p_followTrigger->m_targetGroupID;
+	int layerGroupID = followTrigger->m_targetGroupID;
 
 	newLayer.m_layerID = layerGroupID;
-	newLayer.m_layerDepth = p_followTrigger->m_followXMod;
+	//newLayer.m_layerDepth = followTrigger->m_followXMod;
 
-	newLayer.m_scaleTriggerPtr = p_scaleTrigger;
-	newLayer.m_followTriggerPtr = p_followTrigger;
+	newLayer.m_scaleTriggerPtr = scaleTrigger;
+	newLayer.m_followTriggerPtr = followTrigger;
     return &newLayer;
 }
 
@@ -165,7 +165,7 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortDepth()
 
     std::ranges::sort(ret,
         [](const ParallaxSetupLayer* a, const ParallaxSetupLayer* b) {
-            return a->m_layerDepth < b->m_layerDepth;
+            return a->getDepth() < b->getDepth();
         }
     );
 
@@ -187,10 +187,63 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortGroupID()
 float scaleFromDepth(float depth){
     return 1.0f-depth;
 }
+
+//function that returns "mixed" if a float is nan but just the number if otherwise
+gd::string nanIsMixed(float input){
+    return (std::isnan(input) ? gd::string("Mixed") : fmt::to_string(input));
+}
+float ParallaxSetupLayer::getDepth() const
+{
+	float xmod = m_followTriggerPtr->m_followXMod;
+	float ymod = m_followTriggerPtr->m_followYMod;
+
+	if(xmod!=ymod) return NAN;
+
+	return xmod;
+}
+gd::string ParallaxSetupLayer::getDepthString() const
+{
+	return nanIsMixed(getDepth());
+}
+float ParallaxSetup::getDuration() const
+{
+	//return -1 (or infinite time) by default
+	if(m_layers.empty()) return -1.0f;
+
+	float duration = m_layers.front().getDuration();
+
+	//make sure remaining layers have the same duration
+	//this does go over the first layer twice but im pr sure thats fine cuz this is a deque so doing them in order is faster
+	for(auto& layer : m_layers){
+		if(duration != layer.getDuration()) return NAN;
+	}
+
+	return duration;
+}
+gd::string ParallaxSetup::getDurationString() const
+{
+	return nanIsMixed(getDuration());
+}
+
+void ParallaxSetup::setDuration(float duration)
+{
+	for(auto& layer : m_layers)
+		layer.setDuration(duration);
+}
+
+float ParallaxSetupLayer::getDuration() const
+{
+    return m_followTriggerPtr->m_duration;
+}
+void ParallaxSetupLayer::setDuration(float duration)
+{
+	trigger::setDuration(m_followTriggerPtr,duration);
+}
 void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
 {
-    m_layerDepth = depth;
-    //now that we got the input depth, set the triggers
+	//m_layerDepth = depth;
+    
+	//now that we got the input depth, set the triggers
     m_followTriggerPtr->m_followXMod = depth;
     m_followTriggerPtr->m_followYMod = depth;
     

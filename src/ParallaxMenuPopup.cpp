@@ -19,7 +19,14 @@ constexpr float layerListX = popupWidth-padAmount;
 
 void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 {
-    m_layerListNode->removeAllChildrenWithCleanup(true);
+    //m_layerListMenu->removeAllChildrenWithCleanup(true);
+
+    //reset the nodes because we cant just delete them apparently
+    m_nextLayerListNode = 0;
+    auto nodes = m_layerListMenu->getChildrenExt();
+    for(auto node : nodes)
+        node->setVisible(false);
+
 
     if(setup){
         auto sortedLayers = setup->sortDepth();
@@ -29,7 +36,7 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
     }
 
     //update everything in the right order
-    m_layerListNode->updateLayout();
+    m_layerListMenu->updateLayout();
     m_scrollLayer->updateLayout();
     m_layerListBackground->updateLayout();
 }
@@ -98,8 +105,8 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     m_mainLayer->addChild(m_layerListBackground);
 
-    m_layerListNode = CCNode::create();
-    m_layerListNode->setLayout(
+    m_layerListMenu = CCMenu::create();
+    m_layerListMenu->setLayout(
         AxisLayout::create(Axis::Column)
         ->setAutoGrowAxis({0.0f})
         ->setGap(0.0f)
@@ -115,9 +122,8 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     m_layerListBackground->addChild(m_scrollLayer);
     m_layerListBackground->addChild(m_layerListScrollBar);
+    m_scrollLayer->addChild(m_layerListMenu);
     
-    m_scrollLayer->addChild(m_layerListNode);
-
     //create the parallax setup list
 	m_parallaxSetupList.scanEditorForSetups(m_editorLayer);
     
@@ -172,7 +178,7 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     auto layerListLabel = Label::create("Layers","goldFont.fnt");
     //place it right above the layer list
     //try to line the y up with the sort button
-    layerListLabel->setPosition({popupWidth-padAmount-(layerListWidth/2),layerListHeight+padAmount+3.0f});
+    layerListLabel->setPosition(popupWidth-padAmount-(layerListWidth/2),layerListHeight+padAmount+3.0f);
     layerListLabel->setAnchorPoint({0.5f,0.0f});
 
     m_mainLayer->addChild(layerListLabel);
@@ -231,7 +237,56 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_layerListHint->setColor(constants::ui::disabledColor);
     m_layerListHint->setOpacity(constants::ui::disabledAlpha);
 
+    //add the duration input
+    auto durationInputMenu = CCMenu::create();
+    m_mainLayer->addChild(durationInputMenu);
 
+    m_durationInput = TextInput::create(100.0f,"Num");
+    m_durationInput->setCommonFilter(CommonFilter::Float);
+
+    auto textInputNode = m_durationInput->getInputNode();
+    textInputNode->m_numberInput = true;//clear non numeric
+    textInputNode->m_placeholderColor = ccColor3B{120,170,240};//copy the color robtob uses
+    textInputNode->setString("");//updates the placeholder color
+
+    auto durationInputLabel = Label::create("Duration:","bigFont.fnt");
+        
+    m_durationInput->setCallback([this](const std::string&){
+        auto setup = getSelectedSetup();
+        if(!setup) return;
+        
+        //calls whenever the text is changed
+        //get the input value as a float
+        std::string durationInputString = m_durationInput->getString();
+        auto durationResult = geode::utils::numFromString<float>(durationInputString);
+        float inputDuration = 0.0f;
+        if (durationResult) {
+            inputDuration = durationResult.unwrap();
+        }
+
+        setup->setDuration(inputDuration);
+    });
+
+    auto makeDurationInfiniteButton = CCMenuItemSpriteExtra::create(
+        ButtonSprite::create("Inf."),
+        this,
+        menu_selector(ParallaxMenuPopup::onMakeDurationInfiniteButton)
+    );
+    
+    durationInputMenu->addChild(durationInputLabel);
+    durationInputMenu->addChild(m_durationInput);
+    durationInputMenu->addChild(makeDurationInfiniteButton);
+    durationInputMenu->setLayout(
+        AxisLayout::create()
+        ->setAxis(Axis::Row)
+    );
+    durationInputMenu->setPosition(padAmount,popupHeight/2);
+    durationInputMenu->setAnchorPoint({0.0f,0.5f});
+    durationInputMenu->setContentSize({300.0f,1.0f});
+    durationInputMenu->setScale(0.5f);
+    durationInputMenu->updateLayout();
+
+    //there are some issues with this rn idk why
     init_createSetupSwitcher();
 
     updateAllUI();
@@ -239,12 +294,17 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     return true;
 }
-
+void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *){
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+    m_durationInput->setString("-1");
+    setup->setDuration(-1.0f);
+}
 //idk where else to put this function
 template <typename T>
 void enableNode(T* item){
     item->setEnabled(true);
-    item->setColor(ccColor3B{255,255,255});
+    item->setColor(ccWHITE);
     item->setOpacity(255);
 }
 template <typename T>
@@ -294,8 +354,20 @@ void ParallaxMenuPopup::updateSetupSelector()
     if(enableNext) enableNode(m_setupSwitcherNextButton);
     else disableNode(m_setupSwitcherNextButton);
     
-    m_setupSelectorLabel->setText(fmt::format("{}/{}",m_selectedSetupIndex+1,m_parallaxSetupList.m_setups.size()));
+
+    int setupCount = m_parallaxSetupList.m_setups.size();
+    int setupIndex = (setupCount==0) ? 0 : m_selectedSetupIndex+1;
+
+    m_setupSelectorLabel->setText(fmt::format("{}/{}",setupIndex,setupCount));
 }
+void ParallaxMenuPopup::updateSetupDurationInput()
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return; 
+        
+    m_durationInput->setString(setup->getDurationString());
+}
+
 
 //TODO: clean this up
 //to avoid explicit in copy-initialization build issues on android create a set of empty groups for finding a group ID like this
@@ -312,8 +384,8 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     auto newTriggersPosition = setup->getPositionForNewLayerTriggers();
 
     //first add the triggers
-    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(constants::objectID::SCALE_TRIGGER,newTriggersPosition,false));
-    auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(constants::objectID::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
+    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(trigger::SCALE_TRIGGER,newTriggersPosition,false));
+    auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
     //give them the correct groups
     int newLayerGroupID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
     //set the target gid
@@ -325,9 +397,8 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     //this should probably be able to be changed in settings later
     newScaleTrigger->m_centerGroupID = setup->m_rootID;
     //set the lengths
-    float defaultFollowDuration = -1.0f;//should be infinite (idk why you cant set it to this in game)
     newScaleTrigger->m_duration = 0.0f;
-    newFollowTrigger->m_duration = defaultFollowDuration;
+    newFollowTrigger->m_duration = setup->getDuration();
     
     //create a new layer object
     auto newLayer = setup->addLayer(newScaleTrigger,newFollowTrigger);
@@ -335,7 +406,7 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
 
     //next add it to the ui
     addLayerNodeToList(newLayer);
-    m_layerListNode->updateLayout();
+    m_layerListMenu->updateLayout();
     m_scrollLayer->updateLayout();
 
     //update the group id
@@ -378,12 +449,12 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
 
     //first create the area move triggre
     auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(m_editorLayer->createObject(
-        constants::objectID::AREA_MOVE_TRIGGER,
+        trigger::AREA_MOVE_TRIGGER,
         newSetupPos+CCPoint{0.0f,0.0f},
         false
     ));
     auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(m_editorLayer->createObject(
-        constants::objectID::ADVANCED_FOLLOW_TRIGGER,
+        trigger::ADVANCED_FOLLOW_TRIGGER,
         newSetupPos+CCPoint{editor::constants::GRID_SIZE,0.0f},
         false
     ));
@@ -397,13 +468,11 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
     int rootID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
-    newAreaMoveTrigger->m_targetGroupID=rootID;
+    trigger::setTarget(newAreaMoveTrigger, rootID);
     int followID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
-    newAdvancedFollowTrigger->m_centerGroupID = rootID;
-    newAdvancedFollowTrigger->m_targetGroupID = followID;
-    //update these
-    LevelEditorLayer::updateObjectLabel(newAreaMoveTrigger);
-    LevelEditorLayer::updateObjectLabel(newAdvancedFollowTrigger);
+    trigger::setTarget(newAdvancedFollowTrigger, followID);
+    trigger::setCenter(newAdvancedFollowTrigger, rootID);
+
     //now add the two root and follow objects
     //these can be any object so im making them look like a gd icon cuz its cute ig
     constexpr int rootObjectID = 3816;//icon face particle
@@ -458,10 +527,23 @@ void ParallaxMenuPopup::updateAllUI()
     updateAddLayerButton();
     updateLayerListHint();
     updateSetupSelector();
+    updateSetupDurationInput();
 }
 void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
 {
-    auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,40},layer);
-    m_layerListNode->addChild(layerNode);
+    //if we need to add a new node do that
+    //this could probably be optimized later
+    auto existingLayers = m_layerListMenu->getChildrenExt();
+
+    if (m_nextLayerListNode >= existingLayers.size()){
+        auto layerNode = ParallaxMenuLayerNode::create({layerListWidth,40},layer);
+        m_layerListMenu->addChild(layerNode);
+    }else{
+        auto layerNode = static_cast<ParallaxMenuLayerNode*>(existingLayers[m_nextLayerListNode]);
+        layerNode->setLayer(layer);
+        layerNode->setVisible(true);
+    }
+
+    m_nextLayerListNode++;
 }
 
