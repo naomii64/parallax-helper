@@ -119,6 +119,10 @@ ParallaxSetup* ParallaxSetupList::addSetup(EnterEffectObject* areaMoveTrigger,Ad
 	return &newSetup;
 }
 
+void ParallaxSetupList::removeSetupByIndex(size_t index)
+{
+	m_setups.erase(m_setups.begin() + index);
+}
 
 ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTrigger, EffectGameObject *followTrigger)
 {
@@ -189,8 +193,8 @@ float scaleFromDepth(float depth){
 }
 
 //function that returns "mixed" if a float is nan but just the number if otherwise
-gd::string nanIsMixed(float input){
-    return gd::string(std::isnan(input) ? "Mixed" : fmt::to_string(input));
+std::string nanIsMixed(float input){
+    return std::string(std::isnan(input) ? "Mixed" : fmt::to_string(input));
 }
 float ParallaxSetupLayer::getDepth() const
 {
@@ -201,7 +205,7 @@ float ParallaxSetupLayer::getDepth() const
 
 	return xmod;
 }
-gd::string ParallaxSetupLayer::getDepthString() const
+std::string ParallaxSetupLayer::getDepthString() const
 {
 	return nanIsMixed(getDepth());
 }
@@ -220,7 +224,7 @@ float ParallaxSetup::getDuration() const
 
 	return duration;
 }
-gd::string ParallaxSetup::getDurationString() const
+std::string ParallaxSetup::getDurationString() const
 {
 	return nanIsMixed(getDuration());
 }
@@ -230,16 +234,39 @@ size_t ParallaxSetup::getLayerCount() const
     return m_layers.size();
 }
 
+int ParallaxSetup::getEditorLayer() const
+{
+    return m_areaMoveTriggerPtr->m_editorLayer;
+}
+
 void ParallaxSetup::setDuration(float duration)
 {
 	for(auto& layer : m_layers)
 		layer.setDuration(duration);
 }
 
+void ParallaxSetup::deleteAllLayersAndLayerTriggers()
+{
+	for(auto& layer : m_layers)
+		layer.deleteTriggerObjects();
+
+	m_layers.clear();
+}
+
+void ParallaxSetup::deleteAllRootAndFollowObjects()
+{
+	auto rootObjs = editor::objectsWithGroup(m_rootID);
+    auto followObjs = editor::objectsWithGroup(m_followID);
+
+	for(auto obj : CCArrayExt<GameObject*>(rootObjs)) editor::object::remove(obj);
+    for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::remove(obj);
+}
+
 float ParallaxSetupLayer::getDuration() const
 {
     return m_followTriggerPtr->m_duration;
 }
+
 void ParallaxSetupLayer::setDuration(float duration)
 {
 	trigger::setDuration(m_followTriggerPtr,duration);
@@ -257,3 +284,11 @@ void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
     m_scaleTriggerPtr->m_objectScaleY = scale;
 }
 
+void ParallaxSetupLayer::deleteTriggerObjects()
+{
+	editor::object::remove(m_scaleTriggerPtr);
+	editor::object::remove(m_followTriggerPtr);
+	
+	m_scaleTriggerPtr = nullptr;
+	m_followTriggerPtr = nullptr;
+}

@@ -10,7 +10,7 @@ public:
     //the depth will no longer be stored here
     //float m_layerDepth = 0.0f;
     float getDepth() const;
-    gd::string getDepthString() const;
+    std::string getDepthString() const;
 
     float getDuration() const;
     void setDuration(float duration);
@@ -19,8 +19,8 @@ public:
     EffectGameObject* m_followTriggerPtr = nullptr;
 
     void setTriggerValuesByDepth(float depth);
-private:
 
+    void deleteTriggerObjects();//deletes the two trigger objects in the editor
 };
 
 class ParallaxSetup {
@@ -30,10 +30,15 @@ public:
     std::deque<ParallaxSetupLayer> m_layers;
 
     float getDuration() const;
-    gd::string getDurationString() const;
+    std::string getDurationString() const;
     size_t getLayerCount() const;
+    int getEditorLayer() const;
 
     void setDuration(float duration);
+
+    void deleteAllLayersAndLayerTriggers();
+    void deleteAllRootAndFollowObjects();
+
 
     EnterEffectObject* m_areaMoveTriggerPtr = nullptr;
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;
@@ -51,11 +56,12 @@ private:
 
 class ParallaxSetupList {
 public:
-    //scans the given editor for setups and makes a list
-    void scanEditorForSetups(LevelEditorLayer* editorLayer);
+    
+    void scanEditorForSetups(LevelEditorLayer* editorLayer);//scans the given editor for setups and makes a list
     std::deque<ParallaxSetup> m_setups;
 
     ParallaxSetup* addSetup(EnterEffectObject* areaMoveTrigger,AdvancedFollowTriggerObject* advancedFollowTrigger);
+    void removeSetupByIndex(size_t index);
 private:
 
 };

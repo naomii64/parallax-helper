@@ -13,8 +13,8 @@
 	"description": "A mod that manages parallax effects in levels to make it easier.",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3",
-		"alphalaneous.alphas-ui-pack": ">=v1.3.4",
-		"nwo5.silly-api": ">=2.0.1"
+		"alphalaneous.alphas-ui-pack": ">=v1.4.0",
+		"nwo5.silly-api": ">=2.1.0"
 	},
 	"resources": {
 		"sprites": [
@@ -22,6 +22,10 @@
 		]
 	},
 	"settings": {
+		"title-colors": {
+		    "type": "title",
+		    "name": "Colors"
+		},
 		"depth-label-color-default": {
 			"type": "rgb",
 			"name": "Default Depth Color",
@@ -38,7 +42,10 @@
 			"default": [255,170,170]
 		},
 
-
+		"title-keybinds": {
+		    "type": "title",
+		    "name": "Keybinds"
+		},
 		"keybind-layerlist-up": {
 			"type":"keybind",
 			"name":"Up Layer List",
@@ -52,6 +59,54 @@
 			"default":["Down"],
 			"category": "editor",
 			"allow-in-text-inputs":true
+		},
+		
+		"title-default-center-objects": {
+		    "type": "title",
+		    "name": "Center Object Settings"
+		},
+		"int-root-object-ID": {
+    		"type": "int",
+    		"name": "Root Object ID",
+			"default": 3816,
+			"description": "default is 3816 or particle face"
+		},
+		"float-root-object-scale": {
+    		"type": "float",
+    		"name": "Root Object scale",
+			"default":0.5,
+
+			"min": 0.0,
+    		"max": 4.0,
+			"control": {
+        		"arrows": true,
+        		"arrow-step": 0.1,
+				
+				"slider": true,
+        		"slider-step": 0.1
+    		}
+		},
+		"int-follow-object-ID": {
+    		"type": "int",
+    		"name": "Follow Object ID",
+			"default": 3805,
+			"description": "default is 3805 or particle square"
+		},
+		"float-follow-object-scale": {
+    		"type": "float",
+    		"name": "follow Object scale",
+			"default":1.0,
+
+			
+			"min": 0.0,
+    		"max": 4.0,
+			"control": {
+        		"arrows": true,
+        		"arrow-step": 0.1,
+				
+				"slider": true,
+        		"slider-step": 0.1
+    		}
 		}
 	}
 }

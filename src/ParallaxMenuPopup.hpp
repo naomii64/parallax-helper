@@ -20,12 +20,15 @@ public:
 protected:
     bool init(MyEditorUI* editorUI);
     void init_createSetupSwitcher();
+    void init_createInfoButtons();
 
 
 
     //callbacks
     void onAddLayerButton(CCObject *);
     void onCleanupTriggersButton(CCObject *);
+    void onDeleteSetupButton(CCObject *);
+    
     void onCreateSetupButton(CCObject *);
     void onFindSetupInEditorButton(CCObject *);
     void onMakeDurationInfiniteButton(CCObject *);
@@ -42,8 +45,15 @@ protected:
     LevelEditorLayer* m_editorLayer = nullptr;
     MyEditorUI* m_editorUI = nullptr;
 
+
+    //layer list label
+    Label* m_layerListLabel = nullptr;
     //layer list menus
     CCMenuItemSpriteExtra* m_addLayerButton = nullptr;
+    //setup actions
+    Button* m_findSetupButton = nullptr;
+    Button* m_cleanSetupButton = nullptr;
+    Button* m_deleteSetupButton = nullptr;
     //layer list
     NineSlice* m_layerListBackground = nullptr;
     CCMenu* m_layerListMenu = nullptr;
@@ -69,7 +79,7 @@ private:
 
     //the current setup can probably be passed into a lot of these so it only has to be gotten once
 
-    void updateAddLayerButton();
+    void updateSetupActionButtons();
     void updateLayerListHint();
     void updateSetupSelector();
     void updateSetupDurationInput();//this only really needs to be called when switching setups
