@@ -29,6 +29,7 @@ protected:
     void onCleanupTriggersButton(CCObject *);
     void onDeleteSetupButton(CCObject *);
     
+    void onFindCenterButton(CCObject *);
     void onCreateSetupButton(CCObject *);
     void onFindSetupInEditorButton(CCObject *);
     void onMakeDurationInfiniteButton(CCObject *);
@@ -51,6 +52,7 @@ protected:
     //layer list menus
     CCMenuItemSpriteExtra* m_addLayerButton = nullptr;
     //setup actions
+    Button* m_findCenterButton = nullptr;
     Button* m_findSetupButton = nullptr;
     Button* m_cleanSetupButton = nullptr;
     Button* m_deleteSetupButton = nullptr;

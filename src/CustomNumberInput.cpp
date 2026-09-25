@@ -10,7 +10,7 @@ bool CustomNumberInput::init(float width, geode::ZStringView placeholder, geode:
     inputNode->m_numberInput = true;//clear non numeric
     inputNode->m_placeholderColor = ccColor3B{120,170,240};//copy the color robtob uses
     inputNode->setString("");//updates the placeholder color
-    
+
     return true;
 }
 

@@ -21,6 +21,10 @@ public:
     void setTriggerValuesByDepth(float depth);
 
     void deleteTriggerObjects();//deletes the two trigger objects in the editor
+
+    cocos2d::CCPoint getEditorPosition();
+
+    bool hasScaleTrigger() const;
 };
 
 class ParallaxSetup {
@@ -43,7 +47,7 @@ public:
     EnterEffectObject* m_areaMoveTriggerPtr = nullptr;
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;
 
-    ParallaxSetupLayer* addLayer(TransformTriggerGameObject* scaleTrigger,EffectGameObject* followTrigger);
+    ParallaxSetupLayer* addLayer(TransformTriggerGameObject* scaleTrigger,EffectGameObject* followTrigger);//scaleTrigger can be nullptr to create a follow only layer
     CCPoint getPositionForNewLayerTriggers();
 
     //sorting functions

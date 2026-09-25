@@ -81,12 +81,8 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 		}
 	}
 	//finally add the layers to their setups
-	for(auto& kv : followTriggersByTargetGID){
-		auto followTrigger = kv.second;
-		auto scaleTrigger = scaleTriggersByTargetGID[followTrigger->m_targetGroupID];
-		//see if it has a matching scale trigger
-		if(!scaleTrigger) continue;
-
+	for(auto& [_,followTrigger] : followTriggersByTargetGID){
+		
 		int parallaxID = followTrigger->m_centerGroupID;
 		int layerID = followTrigger->m_targetGroupID;
 
@@ -94,15 +90,22 @@ void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 		auto parallaxSetup = parallaxSetupsByAdvFollowTargetGID[parallaxID];
 		if(!parallaxSetup) continue;
 
-		//make sure they have the same layer group and parallax effect group
-        if(followTrigger->m_targetGroupID!=scaleTrigger->m_targetGroupID) continue;
-		//the scale trigger has to share the same target group, but its center group can either be the root or follow group
-        //probably make this display or be editable in the gui later
-        if(!((
-            scaleTrigger->m_centerGroupID==parallaxSetup->m_followID
-        )||(
-            scaleTrigger->m_centerGroupID==parallaxSetup->m_rootID
-        ))) continue;
+
+
+		//see if it has a matching scale trigger
+		auto scaleTrigger = scaleTriggersByTargetGID[followTrigger->m_targetGroupID];
+		if(scaleTrigger) {
+
+			bool matchesTargetID = followTrigger->m_targetGroupID == scaleTrigger->m_targetGroupID;
+        	//this can center the root OR the follow object, probably make this display or be editable in the gui later
+			//scaling around the root causes bugs sometimes so uhm do something to fix that
+			bool matchesFollowID = scaleTrigger->m_centerGroupID == parallaxSetup->m_followID;
+			bool matchesRootID = scaleTrigger->m_centerGroupID == parallaxSetup->m_rootID;
+
+			bool isMatchingScaleTrigger = (matchesFollowID || matchesRootID) && matchesTargetID;
+
+        	if(!isMatchingScaleTrigger) scaleTrigger = nullptr;
+		}
 
 		parallaxSetup->addLayer(scaleTrigger,followTrigger);
 	}
@@ -130,7 +133,6 @@ ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTri
 	int layerGroupID = followTrigger->m_targetGroupID;
 
 	newLayer.m_layerID = layerGroupID;
-	//newLayer.m_layerDepth = followTrigger->m_followXMod;
 
 	newLayer.m_scaleTriggerPtr = scaleTrigger;
 	newLayer.m_followTriggerPtr = followTrigger;
@@ -142,7 +144,7 @@ CCPoint ParallaxSetup::getPositionForNewLayerTriggers()
 	CCPoint ret = m_areaMoveTriggerPtr->getPosition();
 	//get the point above the highest trigger
 	for(auto& layer : m_layers){
-		auto layerPos = layer.m_scaleTriggerPtr->getPosition();
+		auto layerPos = layer.getEditorPosition();
 		if(layerPos.y<ret.y) continue;
 		ret=layerPos;
 	}
@@ -279,6 +281,8 @@ void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
     m_followTriggerPtr->m_followXMod = depth;
     m_followTriggerPtr->m_followYMod = depth;
     
+	if(!hasScaleTrigger()) return;
+
     float scale = scaleFromDepth(depth);
     m_scaleTriggerPtr->m_objectScaleX = scale;
     m_scaleTriggerPtr->m_objectScaleY = scale;
@@ -286,9 +290,23 @@ void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
 
 void ParallaxSetupLayer::deleteTriggerObjects()
 {
-	editor::object::remove(m_scaleTriggerPtr);
+	if(m_scaleTriggerPtr) editor::object::remove(m_scaleTriggerPtr);
 	editor::object::remove(m_followTriggerPtr);
 	
 	m_scaleTriggerPtr = nullptr;
 	m_followTriggerPtr = nullptr;
+}
+
+cocos2d::CCPoint ParallaxSetupLayer::getEditorPosition()
+{
+	if(hasScaleTrigger()){
+		return m_scaleTriggerPtr->getPosition();
+	}
+	
+	return m_followTriggerPtr->getPosition();
+}
+
+bool ParallaxSetupLayer::hasScaleTrigger() const
+{
+	return m_scaleTriggerPtr != nullptr;
 }

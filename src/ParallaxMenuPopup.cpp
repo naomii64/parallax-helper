@@ -172,8 +172,9 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 {
 
     if (!Popup::init({popupWidth, popupHeight})) return false;
-    //disable the popup animation
+    //popup settings
     m_noElasticity = true;
+    m_closeBtn->setVisible(false);
 
     //save these pointers
     m_editorUI = editorUI;
@@ -392,6 +393,11 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     setupActionMenu->setScale(actionButtonScale);
     setupOptionsBackground->addChild(setupActionMenu);
 
+    m_findCenterButton = Button::createWithSpriteFrameName("gj_findBtn_001.png", [this](Button* btn) {
+        this->onFindCenterButton(btn);
+    });
+    m_findCenterButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Find Center Objects In Editor"));
+    setupActionMenu->addChild(m_findCenterButton);
     m_findSetupButton = Button::createWithSpriteFrameName("gj_findBtn_001.png", [this](Button* btn) {
         this->onFindSetupInEditorButton(btn);
     });
@@ -417,6 +423,15 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     //resize the background
     setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,30+(setupActionButtonSize*actionButtonScale)+padAmount});
+
+
+    //create the ok button that closes the ui
+    auto okButton = Button::createWithNode(ButtonSprite::create("OK",0.8f),[this](Button*){
+        this->onClose(this);
+    });
+    okButton->setPosition(padAmount+(setupOptionsBackgroundWidth/2),padAmount+(30/2));//buttons are 30 units tall
+    m_mainLayer->addChild(okButton);
+
 
     init_createSetupSwitcher();
     init_createInfoButtons();
@@ -540,8 +555,7 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     trigger::setDuration(newScaleTrigger,0.0f);
     trigger::setDuration(newFollowTrigger,setup->getDuration());
     
-    //make sure theyre on the right editor layer
-    
+    //TODO: make sure theyre on the right editor layer
 
     //create a new layer object
     auto newLayer = setup->addLayer(newScaleTrigger,newFollowTrigger);
@@ -569,6 +583,8 @@ void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
     auto setup = getSelectedSetup();
     if(!setup) return;
 
+    //TODO: probably move this into parallaxSetup.cpp later
+
     auto basePosition = setup->m_areaMoveTriggerPtr->getPosition();
     //use the area move as the base
     //the follow trigger goes next to the area move trigger
@@ -579,19 +595,20 @@ void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
     for(auto& layer : setup->m_layers){
         y+=editor::constants::GRID_SIZE;
 
+        if(layer.hasScaleTrigger())
         editor::object::move(layer.m_scaleTriggerPtr,{basePosition.x,y});
         editor::object::move(layer.m_followTriggerPtr,{basePosition.x+editor::constants::GRID_SIZE,y});
     }
 
-    //move the objects below the move trigger
+    //DONT move the objects below the move trigger
     //there should only be 1 of each but this wont account for that yet
-    auto rootFollowObjPos = basePosition-CCPoint{0.0f,editor::constants::GRID_SIZE};
+    //auto rootFollowObjPos = basePosition-CCPoint{0.0f,editor::constants::GRID_SIZE};
 
-    auto rootObjs = editor::objectsWithGroup(setup->m_rootID);
-    auto followObjs = editor::objectsWithGroup(setup->m_followID);
+    //auto rootObjs = editor::objectsWithGroup(setup->m_rootID);
+    //auto followObjs = editor::objectsWithGroup(setup->m_followID);
 
-    for(auto obj : CCArrayExt<GameObject*>(rootObjs)) editor::object::move(obj,rootFollowObjPos);
-    for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::move(obj,rootFollowObjPos);
+    //for(auto obj : CCArrayExt<GameObject*>(rootObjs)) editor::object::move(obj,rootFollowObjPos);
+    //for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::move(obj,rootFollowObjPos);
 }
 
 void ParallaxMenuPopup::onDeleteSetupButton(CCObject *)
@@ -631,6 +648,25 @@ void ParallaxMenuPopup::onDeleteSetupButton(CCObject *)
     );
 }
 
+void ParallaxMenuPopup::onFindCenterButton(CCObject *)
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    editor::selection::clear();
+    //select the objects
+    auto rootObjs = editor::objectsWithGroup(setup->m_rootID);
+    auto followObjs = editor::objectsWithGroup(setup->m_followID);
+    editor::selection::add(rootObjs);
+    editor::selection::add(followObjs);
+    //now go to the first one
+    if(auto obj = rootObjs->firstObject()){
+        auto gameObj = static_cast<GameObject*>(obj);
+        editor::move(gameObj->getPosition());
+        editor::setLayer(gameObj->m_editorLayer);
+    }
+}
+
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
 {
     auto newSetupPos = editor::center();
@@ -652,6 +688,7 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     ));
 
     //setup the area move trigger
+    //why is this making length and movedist 3000 and not 9000????
     newAreaMoveTrigger->m_specialTarget = -3;//target c
     newAreaMoveTrigger->m_length = 9000;
     newAreaMoveTrigger->m_moveDistance = -9000;

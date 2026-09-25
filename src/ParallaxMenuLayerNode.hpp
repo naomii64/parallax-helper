@@ -1,9 +1,10 @@
 #pragma once
+
 #include <Geode/Geode.hpp>
+using namespace geode::prelude;
 
 #include "ParallaxSetup.hpp"
 
-using namespace geode::prelude;
 
 class ParallaxMenuLayerNode : public CCMenu {
 public:

@@ -1,5 +1,9 @@
 #include "ParallaxMenuLayerNode.hpp"
 #include "CustomNumberInput.hpp"
+#include "NumberRequestPopup.hpp"
+
+#include <nwo5.silly-api/include/include.hpp>
+using namespace nwo5::editor::prelude;
 
 bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer* layer)
 {
@@ -57,11 +61,22 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     line->setAnchorPoint({0.0f,0.5f});
     addChild(line);
 
+    //figure out wich sprite to use
+    geode::ZStringView fileName;
+    if(layer->hasScaleTrigger()){
+        fileName = "layerGroupIDTriggers.png"_spr;
+    }else{
+        fileName = "layerGroupIDTrigger_noscale.png"_spr;
+    }
+
     //add the trigger icon where the group is displayed (maybe this can be different for different setups later)
-    auto layerGroupIDBackground = CCSprite::create("layerGroupIDTriggers.png"_spr);
-    layerGroupIDBackground->setAnchorPoint({0.0f,0.5f});
-    layerGroupIDBackground->setPosition({0.0f,size.height/2});
+    auto layerGroupIDBackground = Button::createWithSprite(fileName, [this](Button* btn) {
+        NumberRequestPopup::create()->show();
+    });
+    layerGroupIDBackground->setAnchorPoint({0.5f,0.5f});
+    layerGroupIDBackground->setPosition({25.0f,size.height/2});
     layerGroupIDBackground->setScale(1.5f);
+    layerGroupIDBackground->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Group ID"));
     addChild(layerGroupIDBackground);
 
     //now add the text on top of it
