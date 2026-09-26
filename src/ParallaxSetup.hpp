@@ -48,6 +48,7 @@ public:
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;
 
     ParallaxSetupLayer* addLayer(TransformTriggerGameObject* scaleTrigger,EffectGameObject* followTrigger);//scaleTrigger can be nullptr to create a follow only layer
+    ParallaxSetupLayer* createNewLayer(float depth = 0.0f);//creates a new layer along with its triggers in the editor
     CCPoint getPositionForNewLayerTriggers();
 
     //sorting functions

@@ -23,3 +23,8 @@ CustomNumberInput* CustomNumberInput::create(float width, ZStringView placeholde
     delete ret;
     return nullptr;
 }
+
+void CustomNumberInput::setNumber(float number)
+{
+    setString(fmt::to_string(number));
+}

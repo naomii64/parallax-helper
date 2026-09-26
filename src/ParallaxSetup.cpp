@@ -139,6 +139,41 @@ ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTri
     return &newLayer;
 }
 
+ParallaxSetupLayer* ParallaxSetup::createNewLayer(float depth)
+{
+	auto newTriggersPosition = getPositionForNewLayerTriggers();
+
+    //first add the triggers
+    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(editor::object::createObject(trigger::SCALE_TRIGGER,newTriggersPosition,false));
+    auto newFollowTrigger = static_cast<EffectGameObject*>(editor::object::createObject(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
+    //give them the correct groups
+    int newLayerGroupID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+    //set the target gid
+    newFollowTrigger->m_targetGroupID = newLayerGroupID;
+    newScaleTrigger->m_targetGroupID = newLayerGroupID;
+    //have the follow trigger follow the followid
+    newFollowTrigger->m_centerGroupID = m_followID;
+    //the scale can be either the follow or center, im gonna use the center here
+    //this should probably be able to be changed in settings later
+    newScaleTrigger->m_centerGroupID = m_rootID;
+    //set the lengths
+    //TODO: have this get the value in the duration input for the first trigger
+    trigger::setDuration(newScaleTrigger,0.0f);
+    trigger::setDuration(newFollowTrigger,getDuration());
+    
+    //TODO: make sure theyre on the right editor layer
+
+    //create a new layer object
+    auto newLayer = addLayer(newScaleTrigger,newFollowTrigger);
+    newLayer->setTriggerValuesByDepth(depth);
+	
+    //update the group id
+    LevelEditorLayer::updateObjectLabel(newScaleTrigger);
+    LevelEditorLayer::updateObjectLabel(newFollowTrigger);
+
+	return newLayer;
+}
+
 CCPoint ParallaxSetup::getPositionForNewLayerTriggers()
 {
 	CCPoint ret = m_areaMoveTriggerPtr->getPosition();

@@ -3,7 +3,7 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class NumberRequestPopup : public geode::MDPopup {
+class NumberRequestPopup : public geode::Popup {
 public:
     static NumberRequestPopup* create();
 

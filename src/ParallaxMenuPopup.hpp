@@ -28,11 +28,11 @@ protected:
     void onAddLayerButton(CCObject *);
     void onCleanupTriggersButton(CCObject *);
     void onDeleteSetupButton(CCObject *);
-    
     void onFindCenterButton(CCObject *);
     void onCreateSetupButton(CCObject *);
     void onFindSetupInEditorButton(CCObject *);
     void onMakeDurationInfiniteButton(CCObject *);
+    void onDuplicateAndLayerButton(CCObject *);
 
     //layer list methods
     void loadSetupLayerList(ParallaxSetup* setup);

@@ -286,30 +286,35 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     
 
     //create the menu for test stuff (give this nicer ui later)
-    //auto actionButtonMenu = CCMenu::create();
-    //
-    //actionButtonMenu->setLayout(AxisLayout::create()
-    //    ->setAxis(Axis::Column)
-    //    ->setAxisAlignment(AxisAlignment::Start)
-    //    ->setCrossAxisLineAlignment(AxisAlignment::Start)
-    //);
-    //actionButtonMenu->setAnchorPoint({0.0f,0.0f});
-    //actionButtonMenu->setPosition({padAmount,padAmount});
-    //actionButtonMenu->setScale(0.5f);
-    //
-    ////this one just works whenever
-    //auto dev_createSetupButton = CCMenuItemSpriteExtra::create(
-    //    ButtonSprite::create("Create Parallax Setup"),
+    auto dev_actionButtonMenu = CCMenu::create();
+    
+    dev_actionButtonMenu->setLayout(AxisLayout::create()
+        ->setAxis(Axis::Column)
+        ->setAxisAlignment(AxisAlignment::Start)
+        ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
+    dev_actionButtonMenu->setAnchorPoint({0.0f,0.0f});
+    dev_actionButtonMenu->setPosition({padAmount,padAmount+35.0f});
+    dev_actionButtonMenu->setScale(0.45f);
+        
+    auto dev_duplicateAndLayerButton = CCMenuItemSpriteExtra::create(
+        ButtonSprite::create("Duplicate and Layer Selected"),
+        this,
+        menu_selector(ParallaxMenuPopup::onDuplicateAndLayerButton)
+    );
+    
+    //auto dev_deleteUnusedLayersButton = CCMenuItemSpriteExtra::create(
+    //    ButtonSprite::create("Delete Unused Layers"),
     //    this,
-    //    menu_selector(ParallaxMenuPopup::onCreateSetupButton)
+    //    nullptr//TODO: impl
     //);
-    // 
-    //auto dev_stupidLabel = Label::create("TEMPORARY DEV BUTTONS","goldFont.fnt");
-    //actionButtonMenu->addChild(dev_createSetupButton);
-    //actionButtonMenu->addChild(dev_stupidLabel);
-    //actionButtonMenu->updateLayout();
 
-    //m_mainLayer->addChild(actionButtonMenu);
+    auto dev_stupidLabel = Label::create("TEMPORARY DEV BUTTONS","goldFont.fnt");
+    dev_actionButtonMenu->addChild(dev_duplicateAndLayerButton);
+    dev_actionButtonMenu->addChild(dev_stupidLabel);
+    dev_actionButtonMenu->updateLayout();
+
+    m_mainLayer->addChild(dev_actionButtonMenu);
 
     //add a label for the layer list
     m_layerListHint = Label::create("","bigFont.fnt");
@@ -460,20 +465,101 @@ void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *){
     setup->setDuration(-1.0f);
 }
 
+#include "DuplicateAndLayerPopup.hpp"
+
+void ParallaxMenuPopup::onDuplicateAndLayerButton(CCObject *)
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    if(editor::selection::empty()){
+        Notification::create("Please Select Some Objects First.")->show();
+        return;
+    }
+
+    DuplicateAndLayerPopup::create([this](float rangeMin,float rangeMax, int count){
+        auto setup = this->getSelectedSetup();
+        if(!setup) return;
+
+
+        if(editor::selection::empty()) return;//shouldnt be possible but better safe than sorry
+
+        //now setup wich groups the objects need to be given
+        //for now just create them all
+        std::vector<ParallaxSetupLayer*> layers(count,nullptr);
+        for(size_t i=0;i<count;i++){
+            float v = float(i)/float(count-1);
+
+            float depth = std::lerp(rangeMin,rangeMax,v);
+            //later im gonna make it reuse existing layers
+            layers[i] = setup->createNewLayer(depth);
+        }
+
+
+
+
+        //get the amount that the z order needs to be changed by
+        int minZorder = 0;
+        int maxZorder = 0;
+        bool isFirst = false;
+        for(auto& obj : editor::selection::getExt()){
+            int zOrder = obj->getZOrder();
+
+            if(!isFirst){
+                minZorder = zOrder;
+                maxZorder = zOrder;
+                isFirst=true;
+                continue;
+            }
+
+            if(zOrder>maxZorder) maxZorder = zOrder;
+            if(zOrder<minZorder) minZorder = zOrder;
+        }
+        //now calculate it
+        int zOrderOffset = (maxZorder - minZorder) + 1;
+
+        auto objString = editor::ui()->copyObjectsDetailed(editor::selection::get());
+        auto center = editor::selection::center();
+
+        //delete the original
+        editor::object::remove(editor::selection::get());
+
+        //duplicate it!
+        //TODO: add an option for this to go either backwards or forwards
+        for(size_t i = 0; i<count;i++){
+            auto pastedObjs = editor::ui()->pasteObjects(objString,true,false);
+            editor::object::moveBy(pastedObjs,center);    
+
+            //change the z order
+            for(auto& obj : CCArrayExt<GameObject*>(pastedObjs)){
+                //setZOrder doesnt work for some reason
+                obj->m_zOrder = (obj->getZOrder() - (zOrderOffset * i));
+            }
+
+            editor::object::addGroup(pastedObjs,layers[i]->m_layerID);
+        }
+
+        //Notification::create(fmt::format("{} to {} | count: {}",rangeMin,rangeMax,count))->show();
+        this->onClose(this);
+    })->show();
+}
+
 void ParallaxMenuPopup::updateSetupActionButtons()
 {
     auto setup = getSelectedSetup();
     if(setup){
         enableNode(m_addLayerButton);
-
-        enableNode(m_cleanSetupButton);
+        
+        enableNode(m_findCenterButton);
         enableNode(m_findSetupButton);
+        enableNode(m_cleanSetupButton);
         enableNode(m_deleteSetupButton);
     }else{
         disableNode(m_addLayerButton);
         
-        disableNode(m_cleanSetupButton);
+        disableNode(m_findCenterButton);
         disableNode(m_findSetupButton);
+        disableNode(m_cleanSetupButton);
         disableNode(m_deleteSetupButton);
     }
 }
@@ -522,12 +608,6 @@ void ParallaxMenuPopup::updateSetupDurationInput()
     m_durationInput->setString(setup->getDurationString());
 }
 
-
-//TODO: clean this up
-//to avoid explicit in copy-initialization build issues on android create a set of empty groups for finding a group ID like this
-//this could be replaced with nwo api editor::nextFreeGroup(); however that doesnt update if i give the group to an object
-const gd::unordered_set<int> noExcludeGroups{};
-
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
 
     if(!m_editorLayer) return;
@@ -535,43 +615,14 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     auto setup = getSelectedSetup();
     if(!setup) return;
 
-    auto newTriggersPosition = setup->getPositionForNewLayerTriggers();
-
-    //first add the triggers
-    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(m_editorLayer->createObject(trigger::SCALE_TRIGGER,newTriggersPosition,false));
-    auto newFollowTrigger = static_cast<EffectGameObject*>(m_editorLayer->createObject(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
-    //give them the correct groups
-    int newLayerGroupID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
-    //set the target gid
-    newFollowTrigger->m_targetGroupID = newLayerGroupID;
-    newScaleTrigger->m_targetGroupID = newLayerGroupID;
-    //have the follow trigger follow the followid
-    newFollowTrigger->m_centerGroupID = setup->m_followID;
-    //the scale can be either the follow or center, im gonna use the center here
-    //this should probably be able to be changed in settings later
-    newScaleTrigger->m_centerGroupID = setup->m_rootID;
-    //set the lengths
-    //TODO: have this get the value in the duration input for the first trigger
-    trigger::setDuration(newScaleTrigger,0.0f);
-    trigger::setDuration(newFollowTrigger,setup->getDuration());
-    
-    //TODO: make sure theyre on the right editor layer
-
-    //create a new layer object
-    auto newLayer = setup->addLayer(newScaleTrigger,newFollowTrigger);
-    newLayer->setTriggerValuesByDepth(0.0f);
+    auto newLayer = setup->createNewLayer();
 
     //next add it to the ui
     addLayerNodeToList(newLayer);
     m_layerListMenu->updateLayout();
     m_scrollLayer->updateLayout();
 
-    //update the group id
-    LevelEditorLayer::updateObjectLabel(newScaleTrigger);
-    LevelEditorLayer::updateObjectLabel(newFollowTrigger);
-
     updateAllUI();
-    
     //scroll to the index of the new
     scrollToLayerIndex(setup->getLayerCount()-1);
 }
@@ -696,9 +747,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
-    int rootID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
+    int rootID = m_editorLayer->getNextFreeGroupID(constants::EMPTY_SET);
     trigger::setTarget(newAreaMoveTrigger, rootID);
-    int followID = m_editorLayer->getNextFreeGroupID(noExcludeGroups);
+    int followID = m_editorLayer->getNextFreeGroupID(constants::EMPTY_SET);
     trigger::setTarget(newAdvancedFollowTrigger, followID);
     trigger::setCenter(newAdvancedFollowTrigger, rootID);
 
