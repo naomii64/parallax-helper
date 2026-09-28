@@ -8,11 +8,11 @@
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
 
-constexpr float popupWidth = 400;
+constexpr float popupWidth = 430;
 constexpr float popupHeight = 290;
 
 constexpr float padAmount = 10;
-constexpr float layerListWidth = 200.0f;
+constexpr float layerListWidth = 230.0f;
 constexpr float layerListHeight = 240.0f;
 
 constexpr float layerListX = popupWidth-padAmount;
@@ -58,14 +58,19 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
     m_layerListBackground->updateLayout();
 }
 
-void ParallaxMenuPopup::init_createSetupSwitcher()
+void ParallaxMenuPopup::initSetupSwitcher()
 {
     //create the setup swticher (maybe make this a custom node later?)
     constexpr float setupSwitcherWidth = 90;
     constexpr float setupSwitcherHeight = 20;
     constexpr float setupSwitcherButtonScale = 0.8f;
     auto setupSwitcherMenu = CCMenu::create();
-    setupSwitcherMenu->setPosition({padAmount,popupHeight-padAmount-setupSwitcherHeight});
+    //setupSwitcherMenu->setPosition({padAmount,popupHeight-padAmount-setupSwitcherHeight});
+    setupSwitcherMenu->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::TopLeft)
+        ->setOffset({10.f,-30.f})
+    );
     setupSwitcherMenu->setScale(0.8f);
 
     setupSwitcherMenu->setContentSize({setupSwitcherWidth,setupSwitcherHeight});
@@ -128,7 +133,7 @@ std::string getKeybindStringForInfo(const std::vector<geode::Keybind>& keybinds)
     return ret;
 }
 
-void ParallaxMenuPopup::init_createInfoButtons()
+void ParallaxMenuPopup::initInfoButtons()
 {
     //this might be able to be moved where the label is created
     auto layerListInfoButton = Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [this](Button*) {
@@ -164,35 +169,21 @@ void ParallaxMenuPopup::init_createInfoButtons()
 
     m_layerListLabel->addChild(layerListInfoButton);
 }
-
-#include "CustomNumberInput.hpp"
-
-//todo: clean up this init ui function
-bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
+void ParallaxMenuPopup::initLayerList()
 {
-
-    if (!Popup::init({popupWidth, popupHeight})) return false;
-    //popup settings
-    m_noElasticity = true;
-    m_closeBtn->setVisible(false);
-
-    //save these pointers
-    m_editorUI = editorUI;
-    m_editorLayer = editorUI->m_editorLayer;
-    
-    //initialize the tootip
-    auto tooltip = nwo5::ui::Tooltip::create("chatFont.fnt");
-    tooltip->setScale(0.5f);//scale this down
-    m_mainLayer->addChild(tooltip);
-    
 
     m_layerListBackground = NineSlice::create("square02b_001.png");
     m_layerListBackground->setColor({0, 0, 0});
     m_layerListBackground->setOpacity(44);
     m_layerListBackground->setAnchorPoint({1.0f,0.0f});
 
-    m_layerListBackground->setPosition({layerListX,padAmount+1.5});/*+1.5 to account for the shadow*/
     m_layerListBackground->setContentSize({layerListWidth,layerListHeight});
+    
+    m_layerListBackground->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::BottomRight)
+        ->setOffset({-padAmount,padAmount})
+    );
 
     m_layerListBackground->setLayout(
         AxisLayout::create()
@@ -221,11 +212,70 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_layerListBackground->addChild(m_layerListScrollBar);
     m_scrollLayer->addChild(m_layerListMenu);
     
-    //create the parallax setup list
-	m_parallaxSetupList.scanEditorForSetups(m_editorLayer);
-    
     auto setup = getSelectedSetup();
     loadSetupLayerList(setup);
+}
+void ParallaxMenuPopup::initDevButtons()
+{
+    //create the menu for test stuff (give this nicer ui later)
+    auto dev_actionButtonMenu = CCMenu::create();
+    
+    dev_actionButtonMenu->setLayout(AxisLayout::create()
+        ->setAxis(Axis::Column)
+        ->setAxisAlignment(AxisAlignment::Start)
+        ->setCrossAxisLineAlignment(AxisAlignment::Start)
+    );
+    dev_actionButtonMenu->setAnchorPoint({0.0f,0.0f});
+    dev_actionButtonMenu->setPosition({padAmount,padAmount+35.0f});
+    dev_actionButtonMenu->setScale(0.45f);
+    
+    auto addDevBtn = [&](const char *caption,cocos2d::SEL_MenuHandler callback){
+        auto btn = CCMenuItemSpriteExtra::create(
+            ButtonSprite::create(caption),
+            this,
+            callback
+        );
+        dev_actionButtonMenu->addChild(btn);
+        return btn;//cuz why not
+    };
+
+    addDevBtn("Duplicate and Layer Selected",menu_selector(ParallaxMenuPopup::onDuplicateAndLayerButton));
+    addDevBtn("Create Quick Gradient",menu_selector(ParallaxMenuPopup::onCreateQuickGradientButton));
+    
+
+    //auto dev_deleteUnusedLayersButton = CCMenuItemSpriteExtra::create(
+    //    ButtonSprite::create("Delete Unused Layers"),
+    //    this,
+    //    nullptr//TODO: impl
+    //);
+
+    auto dev_stupidLabel = Label::create("TEMPORARY DEV BUTTONS","goldFont.fnt");
+    dev_actionButtonMenu->addChild(dev_stupidLabel);
+    dev_actionButtonMenu->updateLayout();
+
+    m_mainLayer->addChild(dev_actionButtonMenu);
+}
+//todo: clean up this init ui function
+bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
+{
+
+    if (!Popup::init({popupWidth, popupHeight})) return false;
+    //popup settings
+    m_noElasticity = true;
+    m_closeBtn->setVisible(false);
+
+    //save these pointers
+    m_editorUI = editorUI;
+    m_editorLayer = editorUI->m_editorLayer;
+    
+    //initialize the tootip
+    auto tooltip = nwo5::ui::Tooltip::create("chatFont.fnt");
+    tooltip->setScale(0.5f);//scale this down
+    m_mainLayer->addChild(tooltip);
+    
+    m_parallaxSetupList.scanEditorForSetups(m_editorLayer);
+    
+    initLayerList();
 
     /*
         CREATE THE SORT BUTTON FOR THE LAYER LIST
@@ -284,38 +334,6 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     m_mainLayer->addChild(m_layerListLabel);
     
-
-    //create the menu for test stuff (give this nicer ui later)
-    auto dev_actionButtonMenu = CCMenu::create();
-    
-    dev_actionButtonMenu->setLayout(AxisLayout::create()
-        ->setAxis(Axis::Column)
-        ->setAxisAlignment(AxisAlignment::Start)
-        ->setCrossAxisLineAlignment(AxisAlignment::Start)
-    );
-    dev_actionButtonMenu->setAnchorPoint({0.0f,0.0f});
-    dev_actionButtonMenu->setPosition({padAmount,padAmount+35.0f});
-    dev_actionButtonMenu->setScale(0.45f);
-        
-    auto dev_duplicateAndLayerButton = CCMenuItemSpriteExtra::create(
-        ButtonSprite::create("Duplicate and Layer Selected"),
-        this,
-        menu_selector(ParallaxMenuPopup::onDuplicateAndLayerButton)
-    );
-    
-    //auto dev_deleteUnusedLayersButton = CCMenuItemSpriteExtra::create(
-    //    ButtonSprite::create("Delete Unused Layers"),
-    //    this,
-    //    nullptr//TODO: impl
-    //);
-
-    auto dev_stupidLabel = Label::create("TEMPORARY DEV BUTTONS","goldFont.fnt");
-    dev_actionButtonMenu->addChild(dev_duplicateAndLayerButton);
-    dev_actionButtonMenu->addChild(dev_stupidLabel);
-    dev_actionButtonMenu->updateLayout();
-
-    m_mainLayer->addChild(dev_actionButtonMenu);
-
     //add a label for the layer list
     m_layerListHint = Label::create("","bigFont.fnt");
     m_mainLayer->addChild(m_layerListHint);
@@ -351,16 +369,7 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         auto setup = getSelectedSetup();
         if(!setup) return;
         
-        //calls whenever the text is changed
-        //get the input value as a float
-        std::string durationInputString = m_durationInput->getString();
-        auto durationResult = geode::utils::numFromString<float>(durationInputString);
-        float inputDuration = 0.0f;
-        if (durationResult) {
-            inputDuration = durationResult.unwrap();
-        }
-
-        setup->setDuration(inputDuration);
+        setup->setDuration(m_durationInput->getNumber<float>());
     });
 
     auto makeDurationInfiniteButton = CCMenuItemSpriteExtra::create(
@@ -438,11 +447,13 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_mainLayer->addChild(okButton);
 
 
-    init_createSetupSwitcher();
-    init_createInfoButtons();
+    initSetupSwitcher();
+    initInfoButtons();
+
+    //initDevButtons();
 
     updateAllUI();
-    updateLayout();
+    m_mainLayer->updateLayout();
 
     //the inputs
     m_upListener = listenForKeybindSettingPresses("keybind-layerlist-up", [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
@@ -458,7 +469,9 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 
     return true;
 }
-void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *){
+
+void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *)
+{
     auto setup = getSelectedSetup();
     if(!setup) return;
     m_durationInput->setString("-1");
@@ -542,6 +555,68 @@ void ParallaxMenuPopup::onDuplicateAndLayerButton(CCObject *)
         //Notification::create(fmt::format("{} to {} | count: {}",rangeMin,rangeMax,count))->show();
         this->onClose(this);
     })->show();
+}
+
+void ParallaxMenuPopup::onCreateQuickGradientButton(CCObject *)
+{
+    int selObjectCount = editor::selection::count();
+    if((selObjectCount < 3) || (selObjectCount > 4)){
+        Notification::create("Select 3 or 4 objects.")->show();        
+        return;
+    }
+
+    std::array<int,4> vertexGroupIds = {{0,0,0,0}};
+    
+    //sort objects to be in the order: BL BR TL TR
+    auto selectedObjects = editor::selection::getExt();
+    //TODO: fix thissss
+
+    //put the pointers in an array
+    std::array<GameObject*,4> objArray = {{
+        selectedObjects[0],
+        selectedObjects[1],
+        selectedObjects[2],
+        (selObjectCount >= 4) ? selectedObjects[3] : selectedObjects[2]
+    }};
+
+    //sort from top to bottom
+    std::ranges::sort(objArray,
+        [](GameObject* a, GameObject* b) {
+            return a->getPositionY() < b->getPositionY();
+        }
+    );
+    //then sort from left to right
+    if(objArray[0]->getPositionX() > objArray[1]->getPositionX())
+        std::swap(objArray[0],objArray[1]);
+
+    if(objArray[2]->getPositionX() > objArray[3]->getPositionX())
+        std::swap(objArray[2],objArray[3]);
+
+    size_t i = 0;
+    for(auto& obj : objArray){
+        //skip the final object if only 3 were selected
+        if((selObjectCount <= 3) && (i >= 3)) continue;
+
+        vertexGroupIds[i] = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+        obj->addToGroup(vertexGroupIds[i]);
+        i++;
+    }
+    //now create the gradient trigger
+    auto gradientTrigger = static_cast<GradientTriggerObject*>(editor::object::createObject(
+        editor::trigger::GRADIENT_TRIGGER,
+        editor::ui()->getGridSnappedPos(editor::center())
+    ));
+
+    gradientTrigger->m_vertexMode = true;
+    gradientTrigger->m_gradientID = editor::layer()->getNextFreeGradientID(constants::EMPTY_SET);
+    
+    gradientTrigger->m_upBottomLeftID = vertexGroupIds[0];
+    gradientTrigger->m_downBottomRightID = vertexGroupIds[1];
+    gradientTrigger->m_leftTopLeftID = vertexGroupIds[2];
+    if(selObjectCount==4) gradientTrigger->m_rightTopRightID = vertexGroupIds[3];
+    else gradientTrigger->m_rightTopRightID = vertexGroupIds[2];
+
+    editor::layer()->updateGradientLayers();
 }
 
 void ParallaxMenuPopup::updateSetupActionButtons()
@@ -718,13 +793,16 @@ void ParallaxMenuPopup::onFindCenterButton(CCObject *)
     }
 }
 
+//CCPoint roundToGrid(const CCPoint& point){
+//    return {
+//        (floor(point.x/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE,
+//        (floor(point.y/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE
+//    };
+//}
+
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
 {
-    auto newSetupPos = editor::center();
-    //snap to the grid
-    //maybe make this optional later
-    newSetupPos.x = (floor(newSetupPos.x/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE;
-    newSetupPos.y = (floor(newSetupPos.y/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE;
+    auto newSetupPos = editor::ui()->getGridSnappedPos(editor::center());
 
     //first create the area move triggre
     auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(m_editorLayer->createObject(

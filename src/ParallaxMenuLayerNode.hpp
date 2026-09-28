@@ -4,7 +4,7 @@
 using namespace geode::prelude;
 
 #include "ParallaxSetup.hpp"
-
+#include "CustomNumberInput.hpp"
 
 class ParallaxMenuLayerNode : public CCMenu {
 public:
@@ -16,11 +16,14 @@ public:
     bool getFocused();
 protected:
     bool init(const cocos2d::CCSize &size,ParallaxSetupLayer* layer);
+    void initDepthInput();
+
     void updateDepthLabelColor();
+    void updateGroupIDLabel();
 
     Label* m_layerGroupIDLabel = nullptr;
     Label* m_depthLabel = nullptr;
-    TextInput* m_depthInput = nullptr;
+    CustomNumberInput* m_depthInput = nullptr;
 
     ParallaxSetupLayer* m_layerPtr = nullptr;
 };

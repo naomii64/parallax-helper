@@ -4,7 +4,7 @@ bool CustomNumberInput::init(float width, geode::ZStringView placeholder, geode:
 {
     if(!TextInput::init(width,placeholder,font)) return false;
     
-    setCommonFilter(CommonFilter::Float);
+    setTypeFloat();
     
     auto inputNode = getInputNode();
     inputNode->m_numberInput = true;//clear non numeric
@@ -24,7 +24,55 @@ CustomNumberInput* CustomNumberInput::create(float width, ZStringView placeholde
     return nullptr;
 }
 
-void CustomNumberInput::setNumber(float number)
+void CustomNumberInput::setTypeInt(bool isSigned)
 {
-    setString(fmt::to_string(number));
+    m_isSigned = isSigned;
+    if(isSigned)setCommonFilter(CommonFilter::Int);
+    else setCommonFilter(CommonFilter::Uint);
+}
+void CustomNumberInput::setTypeFloat()
+{
+    m_isSigned = true;
+    setCommonFilter(CommonFilter::Float);
+}
+
+void CustomNumberInput::enableArrows()
+{
+    //just use these arrows
+    constexpr float arrowOffset = 15.f;
+
+    //maybe make this change depending on the type
+    auto arrowPlus = Button::createWithSpriteFrameName("edit_rightBtn_001.png",[this](Button*){
+        int num = getNumber<int>();
+        num++;
+
+        //only happens for integer overflow but still idc
+        if((!m_isSigned) && (num < 0)) num = 0;
+
+        setNumber(num);
+    });
+    arrowPlus->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Right)
+        ->setOffset({arrowOffset,0.0f})
+    );
+
+    auto arrowMinus = Button::createWithSpriteFrameName("edit_leftBtn_001.png",[this](Button*){
+        int num = getNumber<int>();
+        num--;
+
+        if((!m_isSigned) && (num < 0)) num = 0;
+
+        setNumber(num);
+    });
+    arrowMinus->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Left)
+        ->setOffset({-arrowOffset,0.0f})
+    );
+
+    addChild(arrowPlus);
+    addChild(arrowMinus);
+
+    updateLayout();
 }

@@ -62,8 +62,8 @@ bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirm
     );
     depthRangeBackground->addChild(m_rangeInput1);
 
-    m_rangeInput0->setNumber(-0.25f);
-    m_rangeInput1->setNumber(0.25f);
+    m_rangeInput0->setNumber<float>(-0.25f);
+    m_rangeInput1->setNumber<float>(0.25f);
 
     //create the layer count inputtt
     auto layerCountMenu = CCMenu::create();
@@ -76,10 +76,11 @@ bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirm
     
     m_layerCountInput = CustomNumberInput::create(numberInputWidth);
     m_layerCountInput->setAnchorPoint({0.0f,0.5});
+    m_layerCountInput->setTypeInt(false);
     layerCountMenu->addChild(m_layerCountInput);
     
 
-    m_layerCountInput->setNumber(5);
+    m_layerCountInput->setNumber<int>(5);
 
     depthRangeBackground->setLayoutOptions(
         AnchorLayoutOptions::create()

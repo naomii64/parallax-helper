@@ -8,6 +8,7 @@ using namespace alpha::prelude;
 using namespace geode::prelude;
 
 #include "MyEditorUI.hpp"
+#include "CustomNumberInput.hpp"
 
 class ParallaxMenuPopup : public geode::Popup {
 public:
@@ -19,9 +20,10 @@ public:
     ~ParallaxMenuPopup();
 protected:
     bool init(MyEditorUI* editorUI);
-    void init_createSetupSwitcher();
-    void init_createInfoButtons();
-
+    void initDevButtons();//this one can be commented out to hide the dev buttons
+    void initSetupSwitcher();
+    void initInfoButtons();
+    void initLayerList();
 
 
     //callbacks
@@ -33,6 +35,7 @@ protected:
     void onFindSetupInEditorButton(CCObject *);
     void onMakeDurationInfiniteButton(CCObject *);
     void onDuplicateAndLayerButton(CCObject *);
+    void onCreateQuickGradientButton(CCObject *);
 
     //layer list methods
     void loadSetupLayerList(ParallaxSetup* setup);
@@ -67,7 +70,7 @@ protected:
     Button* m_setupSwitcherNextButton = nullptr;
     Label* m_setupSelectorLabel = nullptr;
     //duration input
-    TextInput* m_durationInput = nullptr;
+    CustomNumberInput* m_durationInput = nullptr;
 
     int m_selectedSetupIndex = 0;
 

@@ -18,7 +18,8 @@ public:
     TransformTriggerGameObject* m_scaleTriggerPtr = nullptr;
     EffectGameObject* m_followTriggerPtr = nullptr;
 
-    void setTriggerValuesByDepth(float depth);
+    void setDepth(float depth);
+    void changeGroupID(int newGroupID);//changes the GID of the triggers and replaces the group in other objects
 
     void deleteTriggerObjects();//deletes the two trigger objects in the editor
 

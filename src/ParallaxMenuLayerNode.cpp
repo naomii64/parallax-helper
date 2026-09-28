@@ -1,49 +1,66 @@
 #include "ParallaxMenuLayerNode.hpp"
-#include "CustomNumberInput.hpp"
 #include "NumberRequestPopup.hpp"
 
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
 
+
+void ParallaxMenuLayerNode::initDepthInput()
+{
+
+    constexpr float depthInputWidth = 110.0f;
+    constexpr float padDepthLabel = 2.5f;
+
+    auto depthInputNode = CCMenu::create();
+    depthInputNode->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Right)
+    );
+    depthInputNode->setContentSize({depthInputWidth,30.0f});
+    depthInputNode->setLayout(AnchorLayout::create());
+    depthInputNode->setAnchorPoint({1.0f,0.5f});
+    addChild(depthInputNode);
+    
+    m_depthInput = CustomNumberInput::create(depthInputWidth);
+    
+    m_depthInput->setCallback([this](const std::string&){
+    
+        this->m_layerPtr->setDepth(m_depthInput->getNumber<float>());
+        
+        this->updateDepthLabelColor();
+    });
+    
+    //move it to the side middle
+    m_depthInput->setAnchorPoint({1.0f,0.5f});
+    m_depthInput->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Right)
+    );
+
+    depthInputNode->addChild(m_depthInput);
+
+    //add the depth
+    m_depthLabel = Label::create("Depth:","bigFont.fnt");
+    m_depthLabel->setAnchorPoint({1.0f,0.5f});
+    m_depthLabel->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Left)
+        ->setOffset({-padDepthLabel,0.0f})
+    );
+    m_depthLabel->setScale(0.5);//scale the text down
+    depthInputNode->addChild(m_depthLabel);
+
+    depthInputNode->updateLayout();
+}
 bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer* layer)
 {
     if(!CCMenu::init()) return false;
 
     setContentSize(size);
 
-    constexpr float depthInputWidth = 70.0f;
-    constexpr float padDepthLabel = 2.0f;
+    setLayout(AnchorLayout::create());
 
-    m_depthInput = CustomNumberInput::create(depthInputWidth);
-
-    m_depthInput->setCallback([this](const std::string&){
-        //calls whenever the text is changed
-        //get the input value as a float
-        std::string depthInputString = m_depthInput->getString();
-        auto depthResult = geode::utils::numFromString<float>(depthInputString);
-        float inputDepth = 0.0f;
-        if (depthResult) {
-            inputDepth = depthResult.unwrap();
-        }
-
-        this->m_layerPtr->setTriggerValuesByDepth(inputDepth);
-        
-        //update the depth label color
-        this->updateDepthLabelColor();
-    });
-
-    //move it to the side middle
-    m_depthInput->setAnchorPoint({1.0f,0.5f});
-    m_depthInput->setPosition({size.width,size.height/2});
-
-    addChild(m_depthInput);
-
-    //add the depth
-    m_depthLabel = Label::create("Depth:","bigFont.fnt");
-    m_depthLabel->setAnchorPoint({1.0f,0.5f});
-    m_depthLabel->setPosition({size.width-depthInputWidth-padDepthLabel,size.height/2});
-    m_depthLabel->setScale(0.75*0.75);//scale the text down
-    addChild(m_depthLabel);    
+    initDepthInput();
 
     //make the line 
     constexpr float lineThickness = 2.0f;
@@ -71,7 +88,15 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 
     //add the trigger icon where the group is displayed (maybe this can be different for different setups later)
     auto layerGroupIDBackground = Button::createWithSprite(fileName, [this](Button* btn) {
-        NumberRequestPopup::create()->show();
+        auto popup = NumberRequestPopup::create([this](NumberRequestPopup* popup, bool didConfirm){
+            if(didConfirm){
+                int newGroupID = popup->m_numberInput->getNumber<int>();
+                m_layerPtr->changeGroupID(newGroupID);
+                updateGroupIDLabel();
+            }
+        });
+        popup->m_numberInput->setNumber<int>(m_layerPtr->m_layerID);
+        popup->show();
     });
     layerGroupIDBackground->setAnchorPoint({0.5f,0.5f});
     layerGroupIDBackground->setPosition({25.0f,size.height/2});
@@ -97,13 +122,20 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 void ParallaxMenuLayerNode::setLayer(ParallaxSetupLayer *layer)
 {
     int groupID = layer->m_layerID;
-    m_layerGroupIDLabel->setText(fmt::to_string(groupID));
-
     m_layerPtr = layer;
-    m_depthInput->setString(layer->getDepthString());
+
+    if(m_depthInput)
+        m_depthInput->setString(layer->getDepthString());
 
     updateDepthLabelColor();
+    updateGroupIDLabel();
 }
+
+void ParallaxMenuLayerNode::updateGroupIDLabel()
+{
+    m_layerGroupIDLabel->setText(fmt::to_string(m_layerPtr->m_layerID));    
+}
+
 
 void ParallaxMenuLayerNode::defocus()
 {
@@ -149,6 +181,7 @@ void ParallaxMenuLayerNode::updateDepthLabelColor()
     m_depthLabel->setColor(tintDefault);
     return;
 }
+
 
 ParallaxMenuLayerNode* ParallaxMenuLayerNode::create(const cocos2d::CCSize &size,ParallaxSetupLayer* layer) {
     auto ret = new ParallaxMenuLayerNode();

@@ -165,7 +165,7 @@ ParallaxSetupLayer* ParallaxSetup::createNewLayer(float depth)
 
     //create a new layer object
     auto newLayer = addLayer(newScaleTrigger,newFollowTrigger);
-    newLayer->setTriggerValuesByDepth(depth);
+    newLayer->setDepth(depth);
 	
     //update the group id
     LevelEditorLayer::updateObjectLabel(newScaleTrigger);
@@ -308,7 +308,7 @@ void ParallaxSetupLayer::setDuration(float duration)
 {
 	trigger::setDuration(m_followTriggerPtr,duration);
 }
-void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
+void ParallaxSetupLayer::setDepth(float depth)
 {
 	//m_layerDepth = depth;
     
@@ -321,6 +321,35 @@ void ParallaxSetupLayer::setTriggerValuesByDepth(float depth)
     float scale = scaleFromDepth(depth);
     m_scaleTriggerPtr->m_objectScaleX = scale;
     m_scaleTriggerPtr->m_objectScaleY = scale;
+}
+
+void ParallaxSetupLayer::changeGroupID(int newGroupID)
+{
+	int oldLayerID = m_layerID;
+	m_layerID = newGroupID;
+	//now put it to the triggers
+	m_followTriggerPtr->m_targetGroupID = m_layerID;
+	LevelEditorLayer::updateObjectLabel(m_followTriggerPtr);
+
+	if(m_scaleTriggerPtr){
+		m_scaleTriggerPtr->m_targetGroupID = m_layerID;
+    	LevelEditorLayer::updateObjectLabel(m_scaleTriggerPtr);
+	}
+
+	//then change the objects
+	auto oldObjects = nwo5::utils::array::copy(editor::objectsWithGroup(oldLayerID));
+	for (auto obj : CCArrayExt<GameObject*>(oldObjects)) {
+  		obj->removeFromGroup(oldLayerID);
+  		editor::layer()->removeFromGroup(obj, oldLayerID);
+	}
+
+	for (auto obj : CCArrayExt<GameObject*>(oldObjects)) {
+	  if (obj->addToGroup(m_layerID) == 1) {
+	    editor::layer()->addToGroup(obj, m_layerID, false);
+	  }
+	}	
+	//editor::object::removeGroup(oldObjects,oldLayerID);
+	//editor::object::addGroup(oldObjects,m_layerID);
 }
 
 void ParallaxSetupLayer::deleteTriggerObjects()
