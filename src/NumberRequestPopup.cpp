@@ -71,8 +71,7 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
         ButtonSprite::create("Cancel"),
         [this](Button*){
             if (m_callback) {
-                auto cb = std::move(m_callback);
-                cb(this, false);
+                m_callback(this, false);
             }
             this->onClose(this);
         }
@@ -81,8 +80,7 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
         ButtonSprite::create("Confirm"),
         [this](Button*){
             if (m_callback) {
-                auto cb = std::move(m_callback);
-                cb(this, true);
+                m_callback(this, true);
             }
             this->onClose(this);
         }

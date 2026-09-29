@@ -130,8 +130,7 @@ bool DuplicateAndLayerPopup::init(geode::Function<void(float,float,int)> onConfi
                 std::swap(rangeMin,rangeMax);
 
             if(this->m_onConfirmCallback) {
-                auto cb = std::move(this->m_onConfirmCallback);
-                cb(rangeMin, rangeMax, count);
+                m_onConfirmCallback(rangeMin, rangeMax, count);
             }
             
             this->onClose(this);
