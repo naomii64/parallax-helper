@@ -225,6 +225,18 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortGroupID()
 	return ret;
 }
 
+std::vector<ParallaxSetupLayer *> ParallaxSetup::sortBySortingType(constants::LayerSortingType type)
+{
+	switch (type){
+		case constants::LayerSortingType::BY_DEPTH:
+			return sortDepth();
+		case constants::LayerSortingType::BY_GROUPID:
+			return sortGroupID();
+	}
+	//else just return empty, maybe have some form of error catching to remind to add more stuff here when new sorting types are added
+	return std::vector<ParallaxSetupLayer *>();
+}
+
 float scaleFromDepth(float depth){
     return 1.0f-depth;
 }
@@ -337,19 +349,9 @@ void ParallaxSetupLayer::changeGroupID(int newGroupID)
 	}
 
 	//then change the objects
-	auto oldObjects = nwo5::utils::array::copy(editor::objectsWithGroup(oldLayerID));
-	for (auto obj : CCArrayExt<GameObject*>(oldObjects)) {
-  		obj->removeFromGroup(oldLayerID);
-  		editor::layer()->removeFromGroup(obj, oldLayerID);
-	}
-
-	for (auto obj : CCArrayExt<GameObject*>(oldObjects)) {
-	  if (obj->addToGroup(m_layerID) == 1) {
-	    editor::layer()->addToGroup(obj, m_layerID, false);
-	  }
-	}	
-	//editor::object::removeGroup(oldObjects,oldLayerID);
-	//editor::object::addGroup(oldObjects,m_layerID);
+	auto objs = nwo5::utils::array::copy(editor::objectsWithGroup(oldLayerID));
+	editor::object::removeGroup(objs,oldLayerID);
+	editor::object::addGroup(objs,m_layerID);
 }
 
 void ParallaxSetupLayer::deleteTriggerObjects()

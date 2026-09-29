@@ -20,17 +20,15 @@ constexpr float layerListX = popupWidth-padAmount;
 constexpr float LAYER_NODE_HEIGHT = 40.0f;
 constexpr float LAYER_LIST_SCROLL_LAYER_HEIGHT = 260.0f;
 //idk where else to put this function
-template <typename T>
-void enableNode(T* item){
+void enableNode(Button* item){
     item->setEnabled(true);
     item->setColor(ccWHITE);
     item->setOpacity(255);
 }
-template <typename T>
-void disableNode(T* item){
+void disableNode(Button* item){
     item->setEnabled(false);
-    item->setColor(constants::ui::disabledColor);
-    item->setOpacity(constants::ui::disabledAlpha);
+    item->setColor(constants::ui::DISABLED_COLOR);
+    item->setOpacity(constants::ui::DISABLED_ALPHA);
 }
 
 void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
@@ -46,7 +44,7 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
     }
 
     if(setup){
-        auto sortedLayers = setup->sortDepth();
+        auto sortedLayers = setup->sortBySortingType(constants::getSortingType());
         for(auto layerPtr : sortedLayers){
             addLayerNodeToList(layerPtr);
         }
@@ -255,6 +253,8 @@ void ParallaxMenuPopup::initDevButtons()
 
     m_mainLayer->addChild(dev_actionButtonMenu);
 }
+
+#include "SortPopup.hpp"
 //todo: clean up this init ui function
 bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
 {
@@ -289,14 +289,19 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         AxisLayout::create()
         ->setAxisAlignment(AxisAlignment::End)
     );
-    auto sortButton = CCMenuItemSpriteExtra::create(
+    m_sortButton = Button::createWithNode(
         EditorButtonSprite::createWithSpriteFrameName("GJ_sortIcon_001.png"), 
-        this, 
-        nullptr
+        [this](Button* btn){
+            SortPopup::create([this](SortPopup* popup){
+                //save the sorting and then refresh
+                Mod::get()->setSavedValue<int>(constants::keystrings::SELECTED_SORTING_ID, popup->getSelectedSortingID());
+                //re-sort the menu
+                loadSetupLayerList(getSelectedSetup());
+            })->show();
+        }
     );
-    disableNode(sortButton);//disable this cuz its not implemented yet
 
-    sortMenu->addChild(sortButton);
+    sortMenu->addChild(m_sortButton);
     sortMenu->updateLayout();
     m_mainLayer->addChild(sortMenu);
     /*
@@ -312,10 +317,11 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         ->setAxisAlignment(AxisAlignment::Start)
     );
     
-    m_addLayerButton = CCMenuItemSpriteExtra::create(
+    m_addLayerButton = Button::createWithNode(
         EditorButtonSprite::createWithSpriteFrameName("edit_addCBtn_001.png"), 
-        this, 
-        menu_selector(ParallaxMenuPopup::onAddLayerButton)
+        [this](Button* btn){
+            this->onAddLayerButton(btn);
+        }
     );
     m_addLayerButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Add Layer"));
     
@@ -339,8 +345,8 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_mainLayer->addChild(m_layerListHint);
     m_layerListHint->setPosition(popupWidth-(padAmount*1.25f)-layerListWidth+(m_layerListScrollBar->getPositionX()/2),padAmount+(layerListHeight/2));
     m_layerListHint->setScale(0.3f);
-    m_layerListHint->setColor(constants::ui::disabledColor);
-    m_layerListHint->setOpacity(constants::ui::disabledAlpha);
+    m_layerListHint->setColor(constants::ui::DISABLED_COLOR);
+    m_layerListHint->setOpacity(constants::ui::DISABLED_ALPHA);
 
 
     constexpr float setupOptionsBackgroundWidth = 170.0f;
@@ -622,16 +628,20 @@ void ParallaxMenuPopup::onCreateQuickGradientButton(CCObject *)
 void ParallaxMenuPopup::updateSetupActionButtons()
 {
     auto setup = getSelectedSetup();
+    //maybe just have a list so i dont have to manually add all these
     if(setup){
         enableNode(m_addLayerButton);
-        
+        enableNode(m_sortButton);
+        //actions
         enableNode(m_findCenterButton);
         enableNode(m_findSetupButton);
         enableNode(m_cleanSetupButton);
         enableNode(m_deleteSetupButton);
     }else{
+        //
         disableNode(m_addLayerButton);
-        
+        disableNode(m_sortButton);
+        //actions
         disableNode(m_findCenterButton);
         disableNode(m_findSetupButton);
         disableNode(m_cleanSetupButton);
