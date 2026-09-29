@@ -1,8 +1,8 @@
 #include "DuplicateAndLayerPopup.hpp"
 
-DuplicateAndLayerPopup* DuplicateAndLayerPopup::create(std::function<void(float,float,int)> onConfirmCallback) {
+DuplicateAndLayerPopup* DuplicateAndLayerPopup::create(geode::Function<void(float,float,int)> onConfirmCallback) {
     auto ret = new DuplicateAndLayerPopup();
-    if (ret->init(onConfirmCallback)) {
+    if (ret->init(std::move(onConfirmCallback))) {
         ret->autorelease();
         return ret;
     }
@@ -10,7 +10,7 @@ DuplicateAndLayerPopup* DuplicateAndLayerPopup::create(std::function<void(float,
     return nullptr;
 }
 
-bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirmCallback)
+bool DuplicateAndLayerPopup::init(geode::Function<void(float,float,int)> onConfirmCallback)
 {
     constexpr float popupWidth = 300;
     constexpr float popupHeight = 150;
@@ -18,6 +18,8 @@ bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirm
     if(!Popup::init(popupWidth,popupHeight,"GJ_square02.png")) return false;
     m_closeBtn->setVisible(false);
     setTitle("Duplicate And Layer");
+
+    m_onConfirmCallback = std::move(onConfirmCallback);
 
     //create the range input
     auto depthRangeBackground = NineSlice::create("square02b_001.png");
@@ -116,7 +118,6 @@ bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirm
             this->onClose(this);
         }
     );
-    m_onConfirmCallback = onConfirmCallback;
     auto confirmButton = Button::createWithNode(
         ButtonSprite::create("Confirm"),
         [this](Button*){
@@ -128,8 +129,10 @@ bool DuplicateAndLayerPopup::init(std::function<void(float,float,int)> onConfirm
             if(rangeMin>rangeMax)
                 std::swap(rangeMin,rangeMax);
 
-            if(this->m_onConfirmCallback)
-                this->m_onConfirmCallback(rangeMin,rangeMax,count);
+            if(this->m_onConfirmCallback) {
+                auto cb = std::move(this->m_onConfirmCallback);
+                cb(rangeMin, rangeMax, count);
+            }
             
             this->onClose(this);
         }

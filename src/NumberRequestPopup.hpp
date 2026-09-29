@@ -1,18 +1,15 @@
 #pragma once
 
 #include <Geode/Geode.hpp>
-using namespace geode::prelude;
-
 #include "CustomNumberInput.hpp"
 
 class NumberRequestPopup : public geode::Popup {
+protected:
+    geode::Function<void(NumberRequestPopup*,bool)> m_callback;
+
+    bool init(geode::Function<void(NumberRequestPopup*,bool)> callback);
 public:
-    static NumberRequestPopup* create(std::function<void(NumberRequestPopup*,bool)> callback);
+    static NumberRequestPopup* create(geode::Function<void(NumberRequestPopup*,bool)> callback);
 
     CustomNumberInput* m_numberInput = nullptr;
-protected:
-    bool init(std::function<void(NumberRequestPopup*,bool)> callback);
-
-    std::function<void(NumberRequestPopup*,bool)> m_callback;
-
 };
