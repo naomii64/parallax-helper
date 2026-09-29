@@ -1,10 +1,6 @@
 #include "NumberRequestPopup.hpp"
 
-#include "PopupUtils.hpp"
-
-#include "constants.hpp"
-
-bool NumberRequestPopup::init(std::function<void(NumberRequestPopup*,bool)> callback)
+bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> callback)
 {
     //make this reusable later
     float popupWidth = 300;
@@ -14,7 +10,7 @@ bool NumberRequestPopup::init(std::function<void(NumberRequestPopup*,bool)> call
     m_closeBtn->setVisible(false);
     setTitle("Change Layer Group ID");
 
-    m_callback = callback;
+    m_callback = std::move(callback);
 
 
     auto descriptionBackground = NineSlice::create("square02b_001.png");
@@ -68,9 +64,9 @@ bool NumberRequestPopup::init(std::function<void(NumberRequestPopup*,bool)> call
     return true;
 }
 
-NumberRequestPopup* NumberRequestPopup::create(std::function<void(NumberRequestPopup*,bool)> callback) {
+NumberRequestPopup* NumberRequestPopup::create(geode::Function<void(NumberRequestPopup*,bool)> callback) {
     auto ret = new NumberRequestPopup();
-    if (ret->init(callback)) {
+    if (ret->init(std::move(callback))) {
         ret->autorelease();
         return ret;
     }
