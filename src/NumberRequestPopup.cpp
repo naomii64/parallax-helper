@@ -1,5 +1,9 @@
 #include "NumberRequestPopup.hpp"
 
+#include "constants.hpp"
+
+#include "PopupUtils.hpp"
+
 bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> callback)
 {
     //make this reusable later

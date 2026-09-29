@@ -1,4 +1,5 @@
 #include "DuplicateAndLayerPopup.hpp"
+#include "PopupUtils.hpp"
 
 DuplicateAndLayerPopup* DuplicateAndLayerPopup::create(geode::Function<void(float,float,int)> onConfirmCallback) {
     auto ret = new DuplicateAndLayerPopup();
