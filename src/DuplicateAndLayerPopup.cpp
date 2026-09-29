@@ -99,46 +99,25 @@ bool DuplicateAndLayerPopup::init(geode::Function<void(float,float,int)> onConfi
     depthRangeBackground->updateLayout();
 
     //now create the two close buttons
-    auto closeButtonMenu = CCMenu::create();
-    m_mainLayer->addChild(closeButtonMenu);
-    closeButtonMenu->setAnchorPoint({0.5f,0.0f});
-    closeButtonMenu->setLayoutOptions(
-        AnchorLayoutOptions::create()
-        ->setAnchor(Anchor::Bottom)
-        ->setOffset({0.0f,padAmount})
-    );
-    closeButtonMenu->setLayout(
-        AxisLayout::create()
-        ->setAxis(Axis::Row)
-    );
-
-    auto cancelButton = Button::createWithNode(
-        ButtonSprite::create("Cancel"),
-        [this](Button*){
-            this->onClose(this);
-        }
-    );
-    auto confirmButton = Button::createWithNode(
-        ButtonSprite::create("Confirm"),
-        [this](Button*){
-            int count = this->m_layerCountInput->getNumber<int>();
+    auto closeButtonMenu = PopupUtils::createTwoButtonMenu(
+        [this](bool isBtn2){
+            if(isBtn2){
+                int count = this->m_layerCountInput->getNumber<int>();
             
-            float rangeMin = this->m_rangeInput0->getNumber<float>();
-            float rangeMax = this->m_rangeInput1->getNumber<float>();
-            //make sure theyre the right order
-            if(rangeMin>rangeMax)
-                std::swap(rangeMin,rangeMax);
+                float rangeMin = this->m_rangeInput0->getNumber<float>();
+                float rangeMax = this->m_rangeInput1->getNumber<float>();
+                //make sure theyre the right order
+                if(rangeMin>rangeMax)
+                    std::swap(rangeMin,rangeMax);
 
-            if(this->m_onConfirmCallback) {
-                m_onConfirmCallback(rangeMin, rangeMax, count);
+                if(this->m_onConfirmCallback)
+                    this->m_onConfirmCallback(rangeMin,rangeMax,count);
             }
-            
+
             this->onClose(this);
         }
     );
-    closeButtonMenu->addChild(cancelButton);
-    closeButtonMenu->addChild(confirmButton);
-    closeButtonMenu->updateLayout();
+    m_mainLayer->addChild(closeButtonMenu);
 
     updateLayout();
 

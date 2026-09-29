@@ -3,6 +3,8 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+#include "constants.hpp"
+
 class ParallaxSetupLayer {
 public:
     int m_layerID = 0;
@@ -56,6 +58,7 @@ public:
     std::vector<ParallaxSetupLayer*> getLayerPointerList();//basically no sort, used as a base for sort functions
     std::vector<ParallaxSetupLayer*> sortDepth();
     std::vector<ParallaxSetupLayer*> sortGroupID();
+    std::vector<ParallaxSetupLayer*> sortBySortingType(constants::LayerSortingType type);
 private:
 
 };

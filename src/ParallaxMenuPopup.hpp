@@ -53,7 +53,8 @@ protected:
     //layer list label
     Label* m_layerListLabel = nullptr;
     //layer list menus
-    CCMenuItemSpriteExtra* m_addLayerButton = nullptr;
+    Button* m_addLayerButton = nullptr;
+    Button* m_sortButton = nullptr;
     //setup actions
     Button* m_findCenterButton = nullptr;
     Button* m_findSetupButton = nullptr;
