@@ -1,11 +1,11 @@
 #pragma once
 #include <Geode/Geode.hpp>
+using namespace geode::prelude;
 
 #include "ParallaxSetup.hpp"
 #include <alphalaneous.alphas-ui-pack/include/API.hpp>
 using namespace alpha::prelude;
 
-using namespace geode::prelude;
 
 #include "MyEditorUI.hpp"
 #include "CustomNumberInput.hpp"

@@ -1,5 +1,4 @@
 #include "ParallaxSetup.hpp"
-#include "constants.hpp"
 
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
@@ -225,12 +224,12 @@ std::vector<ParallaxSetupLayer *> ParallaxSetup::sortGroupID()
 	return ret;
 }
 
-std::vector<ParallaxSetupLayer *> ParallaxSetup::sortBySortingType(constants::LayerSortingType type)
+std::vector<ParallaxSetupLayer *> ParallaxSetup::sortBySortingType(Utils::LayerSortingType type)
 {
 	switch (type){
-		case constants::LayerSortingType::BY_DEPTH:
+		case Utils::LayerSortingType::BY_DEPTH:
 			return sortDepth();
-		case constants::LayerSortingType::BY_GROUPID:
+		case Utils::LayerSortingType::BY_GROUPID:
 			return sortGroupID();
 	}
 	//else just return empty, maybe have some form of error catching to remind to add more stuff here when new sorting types are added

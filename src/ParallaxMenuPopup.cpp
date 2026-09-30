@@ -5,6 +5,8 @@
 
 #include "constants.hpp"
 
+#include "Utils.hpp"
+
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
 
@@ -19,17 +21,6 @@ constexpr float layerListX = popupWidth-padAmount;
 
 constexpr float LAYER_NODE_HEIGHT = 40.0f;
 constexpr float LAYER_LIST_SCROLL_LAYER_HEIGHT = 260.0f;
-//idk where else to put this function
-void enableNode(Button* item){
-    item->setEnabled(true);
-    item->setColor(ccWHITE);
-    item->setOpacity(255);
-}
-void disableNode(Button* item){
-    item->setEnabled(false);
-    item->setColor(constants::ui::DISABLED_COLOR);
-    item->setOpacity(constants::ui::DISABLED_ALPHA);
-}
 
 void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 {
@@ -44,7 +35,7 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
     }
 
     if(setup){
-        auto sortedLayers = setup->sortBySortingType(constants::getSortingType());
+        auto sortedLayers = setup->sortBySortingType(Utils::getSortingType());
         for(auto layerPtr : sortedLayers){
             addLayerNodeToList(layerPtr);
         }
@@ -630,22 +621,22 @@ void ParallaxMenuPopup::updateSetupActionButtons()
     auto setup = getSelectedSetup();
     //maybe just have a list so i dont have to manually add all these
     if(setup){
-        enableNode(m_addLayerButton);
-        enableNode(m_sortButton);
+        Utils::enableNode(m_addLayerButton);
+        Utils::enableNode(m_sortButton);
         //actions
-        enableNode(m_findCenterButton);
-        enableNode(m_findSetupButton);
-        enableNode(m_cleanSetupButton);
-        enableNode(m_deleteSetupButton);
+        Utils::enableNode(m_findCenterButton);
+        Utils::enableNode(m_findSetupButton);
+        Utils::enableNode(m_cleanSetupButton);
+        Utils::enableNode(m_deleteSetupButton);
     }else{
         //
-        disableNode(m_addLayerButton);
-        disableNode(m_sortButton);
+        Utils::disableNode(m_addLayerButton);
+        Utils::disableNode(m_sortButton);
         //actions
-        disableNode(m_findCenterButton);
-        disableNode(m_findSetupButton);
-        disableNode(m_cleanSetupButton);
-        disableNode(m_deleteSetupButton);
+        Utils::disableNode(m_findCenterButton);
+        Utils::disableNode(m_findSetupButton);
+        Utils::disableNode(m_cleanSetupButton);
+        Utils::disableNode(m_deleteSetupButton);
     }
 }
 
@@ -673,11 +664,11 @@ void ParallaxMenuPopup::updateSetupSelector()
     bool enablePrev = m_selectedSetupIndex>0;
     bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList.m_setups.size());
 
-    if(enablePrev) enableNode(m_setupSwitcherPrevButton);
-    else disableNode(m_setupSwitcherPrevButton);
+    if(enablePrev) Utils::enableNode(m_setupSwitcherPrevButton);
+    else Utils::disableNode(m_setupSwitcherPrevButton);
 
-    if(enableNext) enableNode(m_setupSwitcherNextButton);
-    else disableNode(m_setupSwitcherNextButton);
+    if(enableNext) Utils::enableNode(m_setupSwitcherNextButton);
+    else Utils::disableNode(m_setupSwitcherNextButton);
     
 
     int setupCount = m_parallaxSetupList.m_setups.size();
@@ -829,8 +820,8 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     //setup the area move trigger
     //why is this making length and movedist 3000 and not 9000????
     newAreaMoveTrigger->m_specialTarget = -3;//target c
-    newAreaMoveTrigger->m_length = 9000;
-    newAreaMoveTrigger->m_moveDistance = -9000;
+    newAreaMoveTrigger->m_length = 9000*3;//multiply by 3 because the triggers store 3 times the value they display
+    newAreaMoveTrigger->m_moveDistance = -9000*3;
     newAreaMoveTrigger->m_relative = true;
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;

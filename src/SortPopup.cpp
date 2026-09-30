@@ -1,6 +1,7 @@
 #include "SortPopup.hpp"
 #include "PopupUtils.hpp"
 #include "constants.hpp"
+#include "Utils.hpp"
 
 SortPopup* SortPopup::create(geode::Function<void(SortPopup*)> callback) {
     auto ret = new SortPopup();
@@ -46,7 +47,7 @@ bool SortPopup::init(geode::Function<void(SortPopup *)> callback)
     int depthEntry = m_radioMenu->addEntry("By Depth");
     int groupIDEntry = m_radioMenu->addEntry("By GroupID");
     
-    m_radioMenu->selectEntry(constants::getSortingType());
+    m_radioMenu->selectEntry(int(Utils::getSortingType()));
 
     m_callback = std::move(callback);
 

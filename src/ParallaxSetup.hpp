@@ -4,6 +4,7 @@
 using namespace geode::prelude;
 
 #include "constants.hpp"
+#include "Utils.hpp"
 
 class ParallaxSetupLayer {
 public:
@@ -58,7 +59,7 @@ public:
     std::vector<ParallaxSetupLayer*> getLayerPointerList();//basically no sort, used as a base for sort functions
     std::vector<ParallaxSetupLayer*> sortDepth();
     std::vector<ParallaxSetupLayer*> sortGroupID();
-    std::vector<ParallaxSetupLayer*> sortBySortingType(constants::LayerSortingType type);
+    std::vector<ParallaxSetupLayer*> sortBySortingType(Utils::LayerSortingType type);
 private:
 
 };
