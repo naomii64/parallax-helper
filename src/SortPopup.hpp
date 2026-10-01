@@ -3,7 +3,7 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-#include "RadioMenu.hpp"
+#include "Utils/RadioMenu.hpp"
 
 class SortPopup : public geode::Popup {
 public:

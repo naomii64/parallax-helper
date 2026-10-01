@@ -2,7 +2,7 @@
 
 #include "constants.hpp"
 
-#include "PopupUtils.hpp"
+#include "Utils.hpp"
 
 bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> callback)
 {
@@ -53,7 +53,7 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
     m_numberInput->enableArrows();
     m_mainLayer->addChild(m_numberInput);
 
-    auto closeButtonMenu = PopupUtils::createTwoButtonMenu(
+    auto closeButtonMenu = Utils::createTwoButtonMenu(
         [this](bool isBtn2){
             if(m_callback)
                 m_callback(this,isBtn2);

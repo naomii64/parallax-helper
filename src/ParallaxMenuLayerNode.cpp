@@ -1,5 +1,7 @@
 #include "ParallaxMenuLayerNode.hpp"
-#include "NumberRequestPopup.hpp"
+
+#include "Utils/NumberRequestPopup.hpp"
+#include "Utils/Settings.hpp"
 
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
@@ -155,30 +157,19 @@ void ParallaxMenuLayerNode::updateDepthLabelColor()
 {
     if(!m_depthLabel) return;
     if(!m_depthInput) return;
-    //this probably doesnt need to be gotten from the mod for EVERY update
-    const ccColor3B tintDefault = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-default");
-    const ccColor3B tintPositive = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-positive");
-    const ccColor3B tintNegative = Mod::get()->getSettingValue<cocos2d::ccColor3B>("depth-label-color-negative");
 
-    std::string depthInputString = m_depthInput->getString();
-    auto depthResult = geode::utils::numFromString<float>(depthInputString);
-    if (depthResult) {
-        float depthValue = depthResult.unwrap();
-        // make sure its not nan or infinity        
-        if(std::isfinite(depthValue)){
-            if(depthValue>0.0f){
-                m_depthLabel->setColor(tintPositive);
-                return;
-            }
-            if(depthValue<0.0f){
-                m_depthLabel->setColor(tintNegative);
-                return;
-            }
-            //0 will just use the default color
-        }
+    float depth = m_depthInput->getNumber<float>();
+
+    if(depth>0.0f){
+        m_depthLabel->setColor(ph::settings::depthLabelColorPositive.get());
+        return;
     }
-    //use the default
-    m_depthLabel->setColor(tintDefault);
+    if(depth<0.0f){
+        m_depthLabel->setColor(ph::settings::depthLabelColorNegative.get());
+        return;
+    }
+    
+    m_depthLabel->setColor(ph::settings::depthLabelColorDefault.get());
     return;
 }
 

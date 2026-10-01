@@ -2,53 +2,24 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-#include "ParallaxSetup.hpp"
 #include <alphalaneous.alphas-ui-pack/include/API.hpp>
 using namespace alpha::prelude;
 
+#include "ParallaxSetup.hpp"
 
-#include "MyEditorUI.hpp"
-#include "CustomNumberInput.hpp"
+#include "Utils/CustomNumberInput.hpp"
 
 class ParallaxMenuPopup : public geode::Popup {
 public:
-    static ParallaxMenuPopup* create(MyEditorUI* editorUI);
+    static ParallaxMenuPopup* create();
 
     ParallaxSetup* getSelectedSetup();
     void scrollToLayerIndex(int index);
     
     ~ParallaxMenuPopup();
 protected:
-    bool init(MyEditorUI* editorUI);
-    void initDevButtons();//this one can be commented out to hide the dev buttons
-    void initSetupSwitcher();
-    void initInfoButtons();
-    void initLayerList();
-
-
-    //callbacks
-    void onAddLayerButton(CCObject *);
-    void onCleanupTriggersButton(CCObject *);
-    void onDeleteSetupButton(CCObject *);
-    void onFindCenterButton(CCObject *);
-    void onCreateSetupButton(CCObject *);
-    void onFindSetupInEditorButton(CCObject *);
-    void onMakeDurationInfiniteButton(CCObject *);
-    void onDuplicateAndLayerButton(CCObject *);
-    void onCreateQuickGradientButton(CCObject *);
-
-    //layer list methods
-    void loadSetupLayerList(ParallaxSetup* setup);
-    void addLayerNodeToList(ParallaxSetupLayer* layer);//node: this does NOT update the layout
-    size_t getFocusedLayer();//returns SIZE_MAX if no layer is selected
-    void changeFocusedLayer(int indexOffset);
 
     ParallaxSetupList m_parallaxSetupList;
-
-    //editor pointers (hopefully these wont be needed with the use of api)
-    LevelEditorLayer* m_editorLayer = nullptr;
-    MyEditorUI* m_editorUI = nullptr;
-
 
     //layer list label
     Label* m_layerListLabel = nullptr;
@@ -80,7 +51,31 @@ protected:
 
     ListenerHandle* m_upListener = nullptr;
     ListenerHandle* m_downListener = nullptr;
-private:
+
+    bool init();
+    void initDevButtons();//this one can be commented out to hide the dev buttons
+    void initSetupSwitcher();
+    void initInfoButtons();
+    void initLayerList();
+
+    //callbacks
+    void onAddLayerButton(CCObject *);
+    void onCleanupTriggersButton(CCObject *);
+    void onDeleteSetupButton(CCObject *);
+    void onFindCenterButton(CCObject *);
+    void onCreateSetupButton(CCObject *);
+    void onFindSetupInEditorButton(CCObject *);
+    void onMakeDurationInfiniteButton(CCObject *);
+    void onDuplicateAndLayerButton(CCObject *);
+    void onCreateQuickGradientButton(CCObject *);
+
+    //layer list methods
+    void loadSetupLayerList(ParallaxSetup* setup);
+    void addLayerNodeToList(ParallaxSetupLayer* layer);//note: this does NOT update the layout
+    size_t getFocusedLayer();//returns SIZE_MAX if no layer is selected
+    void changeFocusedLayer(int indexOffset);
+
+
     void updateAllUI();
 
     //the current setup can probably be passed into a lot of these so it only has to be gotten once

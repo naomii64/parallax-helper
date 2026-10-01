@@ -3,7 +3,7 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-#include "CustomNumberInput.hpp"
+#include "Utils/CustomNumberInput.hpp"
 
 class DuplicateAndLayerPopup : public geode::Popup {
 public:

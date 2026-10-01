@@ -1,8 +1,19 @@
-#include "PopupUtils.hpp"
+#include "Utils.hpp"
 
-#include "constants.hpp"
+void Utils::enableButton(Button *item)
+{
+    item->setEnabled(true);
+    item->setColor(ccWHITE);
+    item->setOpacity(255);   
+}
+void Utils::disableButton(Button *item)
+{
+    item->setEnabled(false);
+    item->setColor(constants::ui::DISABLED_COLOR);
+    item->setOpacity(constants::ui::DISABLED_ALPHA);
+}
 
-CCMenu *PopupUtils::createTwoButtonMenu(std::function<void(bool)> callback,const char* btn1Title, const char* btn2Title)
+CCMenu *Utils::createTwoButtonMenu(std::function<void(bool)> callback, const char *btn1Title, const char *btn2Title)
 {
     auto menu = CCMenu::create();
     menu->setLayout(

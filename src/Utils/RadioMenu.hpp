@@ -3,7 +3,6 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-
 class RadioMenu : public CCMenu {
 public:
     static RadioMenu* create(const cocos2d::CCSize &size);

@@ -1,5 +1,5 @@
 #include "DuplicateAndLayerPopup.hpp"
-#include "PopupUtils.hpp"
+#include "Utils/Utils.hpp"
 
 DuplicateAndLayerPopup* DuplicateAndLayerPopup::create(geode::Function<void(float,float,int)> onConfirmCallback) {
     auto ret = new DuplicateAndLayerPopup();
@@ -100,7 +100,7 @@ bool DuplicateAndLayerPopup::init(geode::Function<void(float,float,int)> onConfi
     depthRangeBackground->updateLayout();
 
     //now create the two close buttons
-    auto closeButtonMenu = PopupUtils::createTwoButtonMenu(
+    auto closeButtonMenu = Utils::createTwoButtonMenu(
         [this](bool isBtn2){
             if(isBtn2){
                 int count = this->m_layerCountInput->getNumber<int>();

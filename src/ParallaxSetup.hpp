@@ -3,8 +3,8 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-#include "constants.hpp"
-#include "Utils.hpp"
+#include "Utils/constants.hpp"
+#include "Utils/Utils.hpp"
 
 class ParallaxSetupLayer {
 public:

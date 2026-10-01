@@ -1,14 +1,15 @@
 #include "ParallaxMenuPopup.hpp"
-
-
 #include "ParallaxMenuLayerNode.hpp"
 
-#include "constants.hpp"
-
-#include "Utils.hpp"
+#include "Utils/constants.hpp"
+#include "Utils/Settings.hpp"
+#include "Utils/Utils.hpp"
 
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
+
+#include "SortPopup.hpp"
+#include "DuplicateAndLayerPopup.hpp"
 
 constexpr float popupWidth = 430;
 constexpr float popupHeight = 290;
@@ -126,8 +127,8 @@ void ParallaxMenuPopup::initInfoButtons()
 {
     //this might be able to be moved where the label is created
     auto layerListInfoButton = Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [this](Button*) {
-        auto keybindsUp = Mod::get()->getSettingValue<std::vector<geode::Keybind>>("keybind-layerlist-up");
-        auto keybindsDown = Mod::get()->getSettingValue<std::vector<geode::Keybind>>("keybind-layerlist-down");
+        auto keybindsUp = ph::settings::keyLayerListUp.get();
+        auto keybindsDown = ph::settings::keyLayerListDown.get();
         
         //build the string line by line
         //i know this is slower but its way more readable
@@ -245,9 +246,8 @@ void ParallaxMenuPopup::initDevButtons()
     m_mainLayer->addChild(dev_actionButtonMenu);
 }
 
-#include "SortPopup.hpp"
 //todo: clean up this init ui function
-bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
+bool ParallaxMenuPopup::init()
 {
 
     if (!Popup::init({popupWidth, popupHeight})) return false;
@@ -255,16 +255,12 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_noElasticity = true;
     m_closeBtn->setVisible(false);
 
-    //save these pointers
-    m_editorUI = editorUI;
-    m_editorLayer = editorUI->m_editorLayer;
-    
     //initialize the tootip
     auto tooltip = nwo5::ui::Tooltip::create("chatFont.fnt");
     tooltip->setScale(0.5f);//scale this down
     m_mainLayer->addChild(tooltip);
     
-    m_parallaxSetupList.scanEditorForSetups(m_editorLayer);
+    m_parallaxSetupList.scanEditorForSetups(editor::layer());
     
     initLayerList();
 
@@ -285,12 +281,13 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
         [this](Button* btn){
             SortPopup::create([this](SortPopup* popup){
                 //save the sorting and then refresh
-                Mod::get()->setSavedValue<int>(constants::keystrings::SELECTED_SORTING_ID, popup->getSelectedSortingID());
+                Mod::get()->setSavedValue<int>(constants::keystrings::SAVED_SELECTED_SORTING_ID, popup->getSelectedSortingID());
                 //re-sort the menu
                 loadSetupLayerList(getSelectedSetup());
             })->show();
         }
     );
+    m_sortButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Sorting"));
 
     sortMenu->addChild(m_sortButton);
     sortMenu->updateLayout();
@@ -453,12 +450,12 @@ bool ParallaxMenuPopup::init(MyEditorUI *editorUI)
     m_mainLayer->updateLayout();
 
     //the inputs
-    m_upListener = listenForKeybindSettingPresses("keybind-layerlist-up", [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+    m_upListener = listenForKeybindSettingPresses(ph::settings::keyLayerListUp.key(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
         if (down) {
             this->changeFocusedLayer(-1);
         }
     });
-	m_downListener = listenForKeybindSettingPresses("keybind-layerlist-down", [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+	m_downListener = listenForKeybindSettingPresses(ph::settings::keyLayerListDown.key(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
         if (down) {
             this->changeFocusedLayer(1);
         }
@@ -471,11 +468,11 @@ void ParallaxMenuPopup::onMakeDurationInfiniteButton(CCObject *)
 {
     auto setup = getSelectedSetup();
     if(!setup) return;
+    // "Inf" also works to represent infinity apparently so maybe add that as an option later
     m_durationInput->setString("-1");
     setup->setDuration(-1.0f);
 }
 
-#include "DuplicateAndLayerPopup.hpp"
 
 void ParallaxMenuPopup::onDuplicateAndLayerButton(CCObject *)
 {
@@ -621,22 +618,21 @@ void ParallaxMenuPopup::updateSetupActionButtons()
     auto setup = getSelectedSetup();
     //maybe just have a list so i dont have to manually add all these
     if(setup){
-        Utils::enableNode(m_addLayerButton);
-        Utils::enableNode(m_sortButton);
+        Utils::enableButton(m_addLayerButton);
+        Utils::enableButton(m_sortButton);
         //actions
-        Utils::enableNode(m_findCenterButton);
-        Utils::enableNode(m_findSetupButton);
-        Utils::enableNode(m_cleanSetupButton);
-        Utils::enableNode(m_deleteSetupButton);
+        Utils::enableButton(m_findCenterButton);
+        Utils::enableButton(m_findSetupButton);
+        Utils::enableButton(m_cleanSetupButton);
+        Utils::enableButton(m_deleteSetupButton);
     }else{
-        //
-        Utils::disableNode(m_addLayerButton);
-        Utils::disableNode(m_sortButton);
+        Utils::disableButton(m_addLayerButton);
+        Utils::disableButton(m_sortButton);
         //actions
-        Utils::disableNode(m_findCenterButton);
-        Utils::disableNode(m_findSetupButton);
-        Utils::disableNode(m_cleanSetupButton);
-        Utils::disableNode(m_deleteSetupButton);
+        Utils::disableButton(m_findCenterButton);
+        Utils::disableButton(m_findSetupButton);
+        Utils::disableButton(m_cleanSetupButton);
+        Utils::disableButton(m_deleteSetupButton);
     }
 }
 
@@ -664,11 +660,11 @@ void ParallaxMenuPopup::updateSetupSelector()
     bool enablePrev = m_selectedSetupIndex>0;
     bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList.m_setups.size());
 
-    if(enablePrev) Utils::enableNode(m_setupSwitcherPrevButton);
-    else Utils::disableNode(m_setupSwitcherPrevButton);
+    if(enablePrev) Utils::enableButton(m_setupSwitcherPrevButton);
+    else Utils::disableButton(m_setupSwitcherPrevButton);
 
-    if(enableNext) Utils::enableNode(m_setupSwitcherNextButton);
-    else Utils::disableNode(m_setupSwitcherNextButton);
+    if(enableNext) Utils::enableButton(m_setupSwitcherNextButton);
+    else Utils::disableButton(m_setupSwitcherNextButton);
     
 
     int setupCount = m_parallaxSetupList.m_setups.size();
@@ -685,8 +681,6 @@ void ParallaxMenuPopup::updateSetupDurationInput()
 }
 
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
-
-    if(!m_editorLayer) return;
 
     auto setup = getSelectedSetup();
     if(!setup) return;
@@ -726,16 +720,6 @@ void ParallaxMenuPopup::onCleanupTriggersButton(CCObject *)
         editor::object::move(layer.m_scaleTriggerPtr,{basePosition.x,y});
         editor::object::move(layer.m_followTriggerPtr,{basePosition.x+editor::constants::GRID_SIZE,y});
     }
-
-    //DONT move the objects below the move trigger
-    //there should only be 1 of each but this wont account for that yet
-    //auto rootFollowObjPos = basePosition-CCPoint{0.0f,editor::constants::GRID_SIZE};
-
-    //auto rootObjs = editor::objectsWithGroup(setup->m_rootID);
-    //auto followObjs = editor::objectsWithGroup(setup->m_followID);
-
-    //for(auto obj : CCArrayExt<GameObject*>(rootObjs)) editor::object::move(obj,rootFollowObjPos);
-    //for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::move(obj,rootFollowObjPos);
 }
 
 void ParallaxMenuPopup::onDeleteSetupButton(CCObject *)
@@ -806,12 +790,12 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     auto newSetupPos = editor::ui()->getGridSnappedPos(editor::center());
 
     //first create the area move triggre
-    auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(m_editorLayer->createObject(
+    auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(editor::object::createObject(
         trigger::AREA_MOVE_TRIGGER,
         newSetupPos+CCPoint{0.0f,0.0f},
         false
     ));
-    auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(m_editorLayer->createObject(
+    auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(editor::object::createObject(
         trigger::ADVANCED_FOLLOW_TRIGGER,
         newSetupPos+CCPoint{editor::constants::GRID_SIZE,0.0f},
         false
@@ -826,9 +810,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
-    int rootID = m_editorLayer->getNextFreeGroupID(constants::EMPTY_SET);
+    int rootID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
     trigger::setTarget(newAreaMoveTrigger, rootID);
-    int followID = m_editorLayer->getNextFreeGroupID(constants::EMPTY_SET);
+    int followID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
     trigger::setTarget(newAdvancedFollowTrigger, followID);
     trigger::setCenter(newAdvancedFollowTrigger, rootID);
 
@@ -838,15 +822,15 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     //cuz i cant write this down in mod.json
     //	constexpr int rootObjectID = 3816;//icon face particle
     //	constexpr int followObjectID = 3805;//hollow square particle
-    int rootObjectID = Mod::get()->getSettingValue<int>("int-root-object-ID");
-    int followObjectID = Mod::get()->getSettingValue<int>("int-follow-object-ID");
+    int rootObjectID = ph::settings::rootObjectID.get();
+    int followObjectID = ph::settings::followObjectID.get();
 
-    auto rootObject = m_editorLayer->createObject(
+    auto rootObject = editor::object::createObject(
         rootObjectID,
         newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
         false
     );
-    auto followObject = m_editorLayer->createObject(
+    auto followObject = editor::object::createObject(
         followObjectID,
         newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
         false
@@ -855,8 +839,8 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     rootObject->addToGroup(rootID);
     followObject->addToGroup(followID);
 
-    editor::object::scale(rootObject,Mod::get()->getSettingValue<float>("float-root-object-scale"));
-    editor::object::scale(followObject,Mod::get()->getSettingValue<float>("float-follow-object-scale"));
+    editor::object::scale(rootObject,ph::settings::rootObjectScale.get());
+    editor::object::scale(followObject,ph::settings::followObjectScale.get());
     
     //add the new setup to the list and select it
     m_selectedSetupIndex = m_parallaxSetupList.m_setups.size();
@@ -873,10 +857,10 @@ void ParallaxMenuPopup::onFindSetupInEditorButton(CCObject *)
     auto setupPosition = setup->m_areaMoveTriggerPtr->getPosition();
     editor::move(setupPosition);
 }
-ParallaxMenuPopup *ParallaxMenuPopup::create(MyEditorUI *editorUI)
+ParallaxMenuPopup *ParallaxMenuPopup::create()
 {
     auto ret = new ParallaxMenuPopup();
-    if (ret->init(editorUI)) {
+    if (ret->init()) {
         ret->autorelease();
         return ret;
     }
@@ -975,8 +959,7 @@ void ParallaxMenuPopup::changeFocusedLayer(int indexOffset)
         }
     }
 
-    auto existingLayers = m_layerListMenu->getChildrenExt();
-    static_cast<ParallaxMenuLayerNode*>(existingLayers[targetLayer])->focus();
+    m_layerListMenu->getChildByIndex<ParallaxMenuLayerNode>(targetLayer)->focus();
 
     scrollToLayerIndex(targetLayer);
 }

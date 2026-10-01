@@ -4,7 +4,8 @@
 using namespace geode::prelude;
 
 #include "ParallaxSetup.hpp"
-#include "CustomNumberInput.hpp"
+
+#include "Utils/CustomNumberInput.hpp"
 
 class ParallaxMenuLayerNode : public CCMenu {
 public:

@@ -1,7 +1,7 @@
 #include "SortPopup.hpp"
-#include "PopupUtils.hpp"
-#include "constants.hpp"
-#include "Utils.hpp"
+
+#include "Utils/constants.hpp"
+#include "Utils/Utils.hpp"
 
 SortPopup* SortPopup::create(geode::Function<void(SortPopup*)> callback) {
     auto ret = new SortPopup();
