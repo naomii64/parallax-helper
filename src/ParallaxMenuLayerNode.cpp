@@ -95,6 +95,7 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
         popup->m_numberInput->setNumber<int>(m_layerPtr->m_layerID);
         popup->show();
     });
+    m_layerGroupIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Group ID"));
     m_layerGroupIDButton->setPosition({25.0f,size.height/2});
     m_layerGroupIDButton->setScale(1.2f);
 

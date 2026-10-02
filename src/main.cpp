@@ -8,7 +8,7 @@ using namespace nwo5::editor::prelude;
 
 #include <Geode/modify/EditorUI.hpp>
 class $modify(MyEditorUI, EditorUI) {
-	bool MyEditorUI::init(LevelEditorLayer* p0) {
+	bool init(LevelEditorLayer* p0) {
 	    if (!EditorUI::init(p0)) return false;
 
 		if (auto menu = this->getChildByID("editor-buttons-menu")) {
