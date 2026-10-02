@@ -79,7 +79,7 @@ bool DuplicateAndLayerPopup::init(geode::Function<void(float,float,int)> onConfi
     
     m_layerCountInput = CustomNumberInput::create(numberInputWidth);
     m_layerCountInput->setAnchorPoint({0.0f,0.5});
-    m_layerCountInput->setTypeInt(false);
+    m_layerCountInput->setTypeUnsignedInt();
     layerCountMenu->addChild(m_layerCountInput);
     
 

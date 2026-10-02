@@ -80,40 +80,30 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     line->setAnchorPoint({0.0f,0.5f});
     addChild(line);
 
-    //figure out wich sprite to use
-    geode::ZStringView fileName;
-    if(layer->hasScaleTrigger()){
-        fileName = "layerGroupIDTriggers.png"_spr;
-    }else{
-        fileName = "layerGroupIDTrigger_noscale.png"_spr;
-    }
-
-    //add the trigger icon where the group is displayed (maybe this can be different for different setups later)
-    auto layerGroupIDBackground = Button::createWithSprite(fileName, [this](Button* btn) {
-        auto popup = NumberRequestPopup::create([this](NumberRequestPopup* popup, bool didConfirm){
-            if(didConfirm){
-                int newGroupID = popup->m_numberInput->getNumber<int>();
-                m_layerPtr->changeGroupID(newGroupID);
-                updateGroupIDLabel();
-            }
-        });
+    m_layerGroupIDButton = TriggerButton::create([this](Button* btn) {
+        auto popup = NumberRequestPopup::create(
+            [this](NumberRequestPopup* popup, bool didConfirm){
+                if(didConfirm){
+                    m_layerPtr->changeGroupID(popup->m_numberInput->getNumber<int>());
+                    updateGroupIDLabel();
+                }
+            },
+            "Change Layer Group ID",
+            "Enter a value to change the group ID of this layer.\n"
+            "This will also replace the previous ID in any object that already has it."
+        );
         popup->m_numberInput->setNumber<int>(m_layerPtr->m_layerID);
         popup->show();
     });
-    layerGroupIDBackground->setAnchorPoint({0.5f,0.5f});
-    layerGroupIDBackground->setPosition({25.0f,size.height/2});
-    layerGroupIDBackground->setScale(1.5f);
-    layerGroupIDBackground->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Group ID"));
-    addChild(layerGroupIDBackground);
+    m_layerGroupIDButton->setPosition({25.0f,size.height/2});
+    m_layerGroupIDButton->setScale(1.2f);
 
-    //now add the text on top of it
-    m_layerGroupIDLabel = Label::create("","bigFont.fnt");
-    auto layerGroupBGSize = layerGroupIDBackground->getContentSize();
-    m_layerGroupIDLabel->setPosition(layerGroupBGSize/2.0f); //put it in the middle   
-    m_layerGroupIDLabel->setScale(0.45f);//scale the label
+    if(layer->hasScaleTrigger())
+        m_layerGroupIDButton->addTrigger(editor::trigger::SCALE_TRIGGER);
+    m_layerGroupIDButton->addTrigger(editor::trigger::FOLLOW_TRIGGER);
 
-    layerGroupIDBackground->addChild(m_layerGroupIDLabel);    
-    layerGroupIDBackground->updateLayout();
+    addChild(m_layerGroupIDButton);
+
     updateLayout();
 
     setLayer(layer);
@@ -135,7 +125,7 @@ void ParallaxMenuLayerNode::setLayer(ParallaxSetupLayer *layer)
 
 void ParallaxMenuLayerNode::updateGroupIDLabel()
 {
-    m_layerGroupIDLabel->setText(fmt::to_string(m_layerPtr->m_layerID));    
+    m_layerGroupIDButton->setLabel(fmt::to_string(m_layerPtr->m_layerID));    
 }
 
 

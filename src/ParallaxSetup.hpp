@@ -24,6 +24,8 @@ public:
     void setDepth(float depth);
     void changeGroupID(int newGroupID);//changes the GID of the triggers and replaces the group in other objects
 
+    void remapCenter(int fromID,int toID);//replaces the fromID with the toID in the trigger centers
+
     void deleteTriggerObjects();//deletes the two trigger objects in the editor
 
     cocos2d::CCPoint getEditorPosition();
@@ -47,6 +49,8 @@ public:
     void deleteAllLayersAndLayerTriggers();
     void deleteAllRootAndFollowObjects();
 
+    void changeRootID(int newID);
+    void changeFollowID(int newID);
 
     EnterEffectObject* m_areaMoveTriggerPtr = nullptr;
     AdvancedFollowTriggerObject* m_advancedFollowTriggerPtr = nullptr;

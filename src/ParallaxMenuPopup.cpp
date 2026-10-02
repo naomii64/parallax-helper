@@ -4,6 +4,8 @@
 #include "Utils/constants.hpp"
 #include "Utils/Settings.hpp"
 #include "Utils/Utils.hpp"
+#include "Utils/TriggerButton.hpp"
+#include "Utils/NumberRequestPopup.hpp"
 
 #include <nwo5.silly-api/include/include.hpp>
 using namespace nwo5::editor::prelude;
@@ -379,7 +381,7 @@ bool ParallaxMenuPopup::init()
         AxisLayout::create()
         ->setAxis(Axis::Row)
     );
-    durationInputMenu->setPosition(padAmount,padAmount);
+    durationInputMenu->setPosition(padAmount,padAmount+64);
     durationInputMenu->setAnchorPoint({0.0f,0.0f});
     durationInputMenu->setContentSize({setupOptionsWidth/durationInputScale,1.0f});
     durationInputMenu->setScale(durationInputScale);
@@ -396,7 +398,7 @@ bool ParallaxMenuPopup::init()
         ->setAxis(Axis::Row)
     );
     setupActionMenu->setAnchorPoint({0.0f,0.0f});
-    setupActionMenu->setPosition(padAmount,30);
+    setupActionMenu->setPosition(padAmount,30+64);
     setupActionMenu->setContentSize({setupOptionsWidth/actionButtonScale,setupActionButtonSize});
     setupActionMenu->setScale(actionButtonScale);
     setupOptionsBackground->addChild(setupActionMenu);
@@ -429,8 +431,84 @@ bool ParallaxMenuPopup::init()
     m_findSetupButton->setContentSize({setupActionButtonSize,setupActionButtonSize});
     m_cleanSetupButton->setContentSize({setupActionButtonSize,setupActionButtonSize});
 
+    //create the root id and follow id buttons
+    auto rootIDMenu = CCMenu::create();
+    rootIDMenu->setLayout(AnchorLayout::create());
+    rootIDMenu->setContentSize({0,0});
+
+    auto createRootOrFollowMenu = [&](const geode::ZStringView& label,int triggerObjID,float yoffset, geode::Button::ButtonCallback btncb){
+
+        auto rootIDMenuLabel = Label::create(label,"bigFont.fnt");
+        rootIDMenuLabel->setAnchorPoint({1.0f,0.5f});
+        rootIDMenuLabel->setLayoutOptions(
+            AnchorLayoutOptions::create()
+            ->setAnchor(Anchor::Right)
+            ->setOffset({-16.0,yoffset})
+        );
+        rootIDMenuLabel->setScale(0.5f);
+        //TODO: make an abstract way of creating a trigger button later
+        auto rootIDSpriteButton = TriggerButton::create(std::move(btncb));
+        rootIDSpriteButton->addTrigger(triggerObjID);
+
+        rootIDSpriteButton->setLayoutOptions(
+            AnchorLayoutOptions::create()
+            ->setAnchor(Anchor::Right)
+            ->setOffset({0.0,yoffset})
+        );
+
+        rootIDMenu->addChild(rootIDMenuLabel);
+        rootIDMenu->addChild(rootIDSpriteButton);
+
+        return rootIDSpriteButton;
+    };    
+    m_setupRootIDButton = createRootOrFollowMenu("Root ID:",nwo5::editor::trigger::AREA_MOVE_TRIGGER,16,[this](Button*){
+        auto setup = getSelectedSetup();
+        if(!setup) return;
+        
+        auto popup = NumberRequestPopup::create(
+            [this,setup](NumberRequestPopup* popup, bool didConfirm){
+                if(didConfirm){
+                    setup->changeRootID(popup->m_numberInput->getNumber<int>());
+                    updateRootIDButton();
+                }
+            },
+            "Change Root ID",
+            "Enter a value to change the root ID of this setup.\n"
+            "This will also replace the previous ID in any object that already has it."
+        );
+
+        popup->m_numberInput->setNumber(setup->m_rootID);
+        popup->show();
+    });
+    m_setupFollowIDButton = createRootOrFollowMenu("follow ID:",nwo5::editor::trigger::ADVANCED_FOLLOW_TRIGGER,-16,[this](Button*){
+        auto setup = getSelectedSetup();
+        if(!setup) return;
+        
+        auto popup = NumberRequestPopup::create(
+            [this,setup](NumberRequestPopup* popup, bool didConfirm){
+                if(didConfirm){
+                    setup->changeFollowID(popup->m_numberInput->getNumber<int>());
+                    updateFollowIDButton();
+                }
+            },
+            "Change Follow ID",
+            "Enter a value to change the follow ID of this setup.\n"
+            "This will also replace the previous ID in any object that already has it."
+        );
+
+        popup->m_numberInput->setNumber(setup->m_followID);
+        popup->show();
+    });
+    
+    updateRootIDButton();
+    updateFollowIDButton();
+    rootIDMenu->setPosition(setupOptionsBackgroundWidth-padAmount,30);
+
+    setupOptionsBackground->addChild(rootIDMenu);
+    rootIDMenu->updateLayout();
+
     //resize the background
-    setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,30+(setupActionButtonSize*actionButtonScale)+padAmount});
+    setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,30+64+(setupActionButtonSize*actionButtonScale)+padAmount});
 
 
     //create the ok button that closes the ui
@@ -591,7 +669,7 @@ void ParallaxMenuPopup::onCreateQuickGradientButton(CCObject *)
         //skip the final object if only 3 were selected
         if((selObjectCount <= 3) && (i >= 3)) continue;
 
-        vertexGroupIds[i] = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+        vertexGroupIds[i] = Utils::getNextFreeGroupID();
         obj->addToGroup(vertexGroupIds[i]);
         i++;
     }
@@ -678,6 +756,22 @@ void ParallaxMenuPopup::updateSetupDurationInput()
     if(!setup) return; 
         
     m_durationInput->setString(setup->getDurationString());
+}
+
+void ParallaxMenuPopup::updateRootIDButton()
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    m_setupRootIDButton->setLabel(fmt::to_string(setup->m_rootID));
+}
+
+void ParallaxMenuPopup::updateFollowIDButton()
+{
+    auto setup = getSelectedSetup();
+    if(!setup) return;
+
+    m_setupFollowIDButton->setLabel(fmt::to_string(setup->m_followID));
 }
 
 void ParallaxMenuPopup::onAddLayerButton(CCObject *){
@@ -776,14 +870,9 @@ void ParallaxMenuPopup::onFindCenterButton(CCObject *)
         editor::move(gameObj->getPosition());
         editor::setLayer(gameObj->m_editorLayer);
     }
-}
 
-//CCPoint roundToGrid(const CCPoint& point){
-//    return {
-//        (floor(point.x/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE,
-//        (floor(point.y/editor::constants::GRID_SIZE)+0.5f)*editor::constants::GRID_SIZE
-//    };
-//}
+    editor::update();//cuz theyre selected now
+}
 
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
 {
@@ -810,9 +899,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     newAreaMoveTrigger->m_directionType=0;
     newAreaMoveTrigger->m_inbound=true;
     //give it a group
-    int rootID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+    int rootID = Utils::getNextFreeGroupID();
     trigger::setTarget(newAreaMoveTrigger, rootID);
-    int followID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+    int followID = Utils::getNextFreeGroupID();
     trigger::setTarget(newAdvancedFollowTrigger, followID);
     trigger::setCenter(newAdvancedFollowTrigger, rootID);
 

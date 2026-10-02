@@ -24,11 +24,16 @@ CustomNumberInput* CustomNumberInput::create(float width, ZStringView placeholde
     return nullptr;
 }
 
-void CustomNumberInput::setTypeInt(bool isSigned)
+
+void CustomNumberInput::setTypeInt()
 {
-    m_isSigned = isSigned;
-    if(isSigned)setCommonFilter(CommonFilter::Int);
-    else setCommonFilter(CommonFilter::Uint);
+    m_isSigned = true;
+    setCommonFilter(CommonFilter::Int);
+}
+void CustomNumberInput::setTypeUnsignedInt()
+{
+    m_isSigned = false;
+    setCommonFilter(CommonFilter::Uint);
 }
 void CustomNumberInput::setTypeFloat()
 {

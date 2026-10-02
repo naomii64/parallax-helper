@@ -7,7 +7,8 @@ class CustomNumberInput : public TextInput {
 public:
     static CustomNumberInput* create(float width, geode::ZStringView placeholder = "Num", geode::ZStringView font = "bigFont.fnt");
 
-    void setTypeInt(bool isSigned = true);
+    void setTypeUnsignedInt();
+    void setTypeInt();
     void setTypeFloat();
 
     void enableArrows();

@@ -4,7 +4,7 @@
 
 #include "Utils.hpp"
 
-bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> callback)
+bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> callback,geode::ZStringView title, geode::ZStringView desc)
 {
     //make this reusable later
     float popupWidth = 300;
@@ -12,7 +12,7 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
 
     if (!Popup::init(popupWidth,popupHeight,"GJ_square02.png")) return false;
     m_closeBtn->setVisible(false);
-    setTitle("Change Layer Group ID");
+    setTitle(title);
 
     m_callback = std::move(callback);
 
@@ -23,8 +23,7 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
     descriptionBackground->setAnchorPoint({0.5f,1.0f});
 
     auto descriptionTextArea = RichTextArea::create(
-        "Put in a value to change the group ID of this layer.\n"
-        "This will also replace the previous ID in any object that already has it.",
+        desc,
         "chatFont.fnt",
         0.75f,
         popupWidth-(constants::ui::PADDING*4)
@@ -49,8 +48,22 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
         ->setAnchor(Anchor::Bottom)
         ->setOffset({0.0f,70.0f})
     );
-    m_numberInput->setTypeInt(false);
+    m_numberInput->setTypeUnsignedInt();
     m_numberInput->enableArrows();
+    //create the new id button (maybe make this optional later)
+    auto newGroupIDButton = Button::createWithSpriteFrameName("GJ_plus2Btn_001.png",
+        [this](Button*){
+            m_numberInput->setNumber<int>(Utils::getNextFreeGroupID());
+        }
+    );
+    newGroupIDButton->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Right)
+        ->setOffset({40.0f,0.0f})
+    );
+    m_numberInput->addChild(newGroupIDButton);
+    m_numberInput->updateLayout();
+
     m_mainLayer->addChild(m_numberInput);
 
     auto closeButtonMenu = Utils::createTwoButtonMenu(
@@ -68,9 +81,9 @@ bool NumberRequestPopup::init(geode::Function<void(NumberRequestPopup*,bool)> ca
     return true;
 }
 
-NumberRequestPopup* NumberRequestPopup::create(geode::Function<void(NumberRequestPopup*,bool)> callback) {
+NumberRequestPopup* NumberRequestPopup::create(geode::Function<void(NumberRequestPopup*,bool)> callback, geode::ZStringView title, geode::ZStringView desc) {
     auto ret = new NumberRequestPopup();
-    if (ret->init(std::move(callback))) {
+    if (ret->init(std::move(callback),title,desc)) {
         ret->autorelease();
         return ret;
     }

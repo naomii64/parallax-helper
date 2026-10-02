@@ -1,5 +1,37 @@
 #include "Utils.hpp"
 
+#include <nwo5.silly-api/include/include.hpp>
+using namespace nwo5::editor::prelude;
+
+Utils::LayerSortingType ph::Utils::getSortingType()
+{
+    int gottenfromthefile = Mod::get()->getSavedValue<int>(constants::keystrings::SAVED_SELECTED_SORTING_ID,0);
+    
+    return Utils::LayerSortingType(std::clamp(gottenfromthefile,0,int(Utils::LayerSortingType::_count) - 1));
+}
+
+geode::ZStringView ph::Utils::getTriggerSprite(int objectID)
+{
+    //for now only area move matters
+    if(objectID == editor::trigger::AREA_MOVE_TRIGGER){
+        return "triggerSymbolSquare.png"_spr;
+    }
+
+    return "triggerSymbolNormal.png"_spr;
+}
+
+void ph::Utils::replaceIDinObjects(int oldID, int newID)
+{
+    auto objs = nwo5::utils::array::copy(editor::objectsWithGroup(oldID));
+	editor::object::removeGroup(objs,oldID);
+	editor::object::addGroup(objs,newID);
+}
+
+int ph::Utils::getNextFreeGroupID()
+{
+    return editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+}
+
 void Utils::enableButton(Button *item)
 {
     item->setEnabled(true);

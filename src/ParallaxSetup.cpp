@@ -146,7 +146,7 @@ ParallaxSetupLayer* ParallaxSetup::createNewLayer(float depth)
     auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(editor::object::createObject(trigger::SCALE_TRIGGER,newTriggersPosition,false));
     auto newFollowTrigger = static_cast<EffectGameObject*>(editor::object::createObject(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
     //give them the correct groups
-    int newLayerGroupID = editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+    int newLayerGroupID = Utils::getNextFreeGroupID();
     //set the target gid
     newFollowTrigger->m_targetGroupID = newLayerGroupID;
     newScaleTrigger->m_targetGroupID = newLayerGroupID;
@@ -310,6 +310,8 @@ void ParallaxSetup::deleteAllRootAndFollowObjects()
     for(auto obj : CCArrayExt<GameObject*>(followObjs)) editor::object::remove(obj);
 }
 
+
+
 float ParallaxSetupLayer::getDuration() const
 {
     return m_followTriggerPtr->m_duration;
@@ -334,10 +336,10 @@ void ParallaxSetupLayer::setDepth(float depth)
     m_scaleTriggerPtr->m_objectScaleY = scale;
 }
 
-void ParallaxSetupLayer::changeGroupID(int newGroupID)
+void ParallaxSetupLayer::changeGroupID(int newID)
 {
-	int oldLayerID = m_layerID;
-	m_layerID = newGroupID;
+	int oldID = m_layerID;
+	m_layerID = newID;
 	//now put it to the triggers
 	m_followTriggerPtr->m_targetGroupID = m_layerID;
 	LevelEditorLayer::updateObjectLabel(m_followTriggerPtr);
@@ -347,10 +349,45 @@ void ParallaxSetupLayer::changeGroupID(int newGroupID)
     	LevelEditorLayer::updateObjectLabel(m_scaleTriggerPtr);
 	}
 
-	//then change the objects
-	auto objs = nwo5::utils::array::copy(editor::objectsWithGroup(oldLayerID));
-	editor::object::removeGroup(objs,oldLayerID);
-	editor::object::addGroup(objs,m_layerID);
+	Utils::replaceIDinObjects(oldID,newID);
+}
+void ParallaxSetupLayer::remapCenter(int fromID, int toID)
+{
+	if(m_scaleTriggerPtr)
+		if(m_scaleTriggerPtr->m_centerGroupID==fromID)
+			editor::trigger::setCenter(m_scaleTriggerPtr,toID);
+	
+	if(m_followTriggerPtr->m_centerGroupID==fromID)
+		editor::trigger::setCenter(m_followTriggerPtr,toID);
+}
+void ParallaxSetup::changeRootID(int newID)
+{
+	int oldID = m_rootID;
+	m_rootID = newID;
+
+	editor::trigger::setTarget(m_areaMoveTriggerPtr,newID);
+	editor::trigger::setCenter(m_advancedFollowTriggerPtr,newID);
+
+	//remap the triggers too (cuz some effects use the scale trigger as the center)
+	for(auto& layer : m_layers){
+		//this is kind of a waste since only the scale trigger matters here but idc
+		layer.remapCenter(oldID,newID);
+	}
+
+	Utils::replaceIDinObjects(oldID,newID);
+}
+void ParallaxSetup::changeFollowID(int newID)
+{	
+	int oldID = m_followID;
+	m_followID = newID;
+
+	editor::trigger::setTarget(m_advancedFollowTriggerPtr,newID);
+
+	for(auto& layer : m_layers){
+		layer.remapCenter(oldID,newID);
+	}
+
+	Utils::replaceIDinObjects(oldID,newID);
 }
 
 void ParallaxSetupLayer::deleteTriggerObjects()

@@ -7,6 +7,7 @@ using namespace alpha::prelude;
 
 #include "ParallaxSetup.hpp"
 
+#include "Utils/TriggerButton.hpp"
 #include "Utils/CustomNumberInput.hpp"
 
 class ParallaxMenuPopup : public geode::Popup {
@@ -43,6 +44,9 @@ protected:
     Label* m_setupSelectorLabel = nullptr;
     //duration input
     CustomNumberInput* m_durationInput = nullptr;
+    //setup groupids
+    TriggerButton* m_setupRootIDButton = nullptr;
+    TriggerButton* m_setupFollowIDButton = nullptr;
 
     int m_selectedSetupIndex = 0;
 
@@ -84,4 +88,9 @@ protected:
     void updateLayerListHint();
     void updateSetupSelector();
     void updateSetupDurationInput();//this only really needs to be called when switching setups
+
+
+    //these dont get ran in updateAllUI
+    void updateRootIDButton();
+    void updateFollowIDButton();
 };

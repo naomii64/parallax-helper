@@ -6,6 +6,7 @@ using namespace geode::prelude;
 #include "ParallaxSetup.hpp"
 
 #include "Utils/CustomNumberInput.hpp"
+#include "Utils/TriggerButton.hpp"
 
 class ParallaxMenuLayerNode : public CCMenu {
 public:
@@ -22,7 +23,8 @@ protected:
     void updateDepthLabelColor();
     void updateGroupIDLabel();
 
-    Label* m_layerGroupIDLabel = nullptr;
+    TriggerButton* m_layerGroupIDButton = nullptr;
+    //Label* m_layerGroupIDLabel = nullptr;
     Label* m_depthLabel = nullptr;
     CustomNumberInput* m_depthInput = nullptr;
 

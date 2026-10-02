@@ -12,11 +12,13 @@ namespace ph::Utils{
     	_count
     };
     
-    inline LayerSortingType getSortingType(){
-    	int gottenfromthefile = Mod::get()->getSavedValue<int>(constants::keystrings::SAVED_SELECTED_SORTING_ID,0);
+    LayerSortingType getSortingType();
 
-    	return LayerSortingType(std::clamp(gottenfromthefile,0,int(LayerSortingType::_count) - 1));
-    }
+    geode::ZStringView getTriggerSprite(int objectID);
+
+    void replaceIDinObjects(int oldID,int newID);//replaces an id with another in objects that have it
+
+    int getNextFreeGroupID();
 
     void enableButton(Button* item);
     void disableButton(Button* item);    
