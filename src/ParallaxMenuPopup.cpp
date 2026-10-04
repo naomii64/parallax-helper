@@ -127,39 +127,68 @@ std::string getKeybindStringForInfo(const std::vector<geode::Keybind>& keybinds)
 
 void ParallaxMenuPopup::initInfoButtons()
 {
-    //this might be able to be moved where the label is created
-    auto layerListInfoButton = Button::createWithSpriteFrameName("GJ_infoIcon_001.png", [this](Button*) {
-        auto keybindsUp = ph::settings::keyLayerListUp.get();
-        auto keybindsDown = ph::settings::keyLayerListDown.get();
-        
-        //build the string line by line
-        //i know this is slower but its way more readable
-        std::string infoStr = fmt::format(
-        "Each layer has a <cg>GroupID</c> as shown in the two circles.\n"
-        "You can also change the <cd>Depth</c> of each layer.\n"
-        "<cr>positive</c> numbers go into the background.\n"
-        "<cj>Negative</c> numbers go into the foreground.\n"
-        "Note that the max depth is 1, representing the given layer being infinitely far into the background.\n"
-        //"The color of the \"Depth:\" text indicates if a given layer is behind or in front of the player.\n"
-        "You can use the <cs>{}</c> and <cs>{}</c> keys to move between layers without needing to move your mouse cursor.",
-        getKeybindStringForInfo(keybindsUp),getKeybindStringForInfo(keybindsDown));
-        //infoStr+="\nYou can also press the <cs>N</c> key to invert numbers but thats a vanilla feature.";
+    //layer list info
+    auto layerListInfoButton = Button::createWithSpriteFrameName("GJ_infoIcon_001.png", 
+        [this](Button*) {
+            auto keybindsUp = ph::settings::keyLayerListUp.get();
+            auto keybindsDown = ph::settings::keyLayerListDown.get();
+            
+            //build the string line by line
+            //i know this is slower but its way more readable
+            std::string infoStr = fmt::format(
+            "Each layer has a <cg>GroupID</c> as shown in the two circles.\n"
+            "You can also change the <cd>Depth</c> of each layer.\n"
+            "<cr>positive</c> numbers go into the background.\n"
+            "<cj>Negative</c> numbers go into the foreground.\n"
+            "Note that the max depth is 1, representing the given layer being infinitely far into the background.\n"
+            //"The color of the \"Depth:\" text indicates if a given layer is behind or in front of the player.\n"
+            "You can use the <cs>{}</c> and <cs>{}</c> keys to move between layers without needing to move your mouse cursor.",
+            getKeybindStringForInfo(keybindsUp),getKeybindStringForInfo(keybindsDown));
+            //infoStr+="\nYou can also press the <cs>N</c> key to invert numbers but thats a vanilla feature.";
 
-        auto alert = FLAlertLayer::create(
-            nullptr,
-            "Info",
-            infoStr,
-            "ok",
-            nullptr,
-            450
-        );
-
-        alert->show();
-    });
+            FLAlertLayer::create(
+                nullptr,
+                "Info",
+                infoStr,
+                "ok",
+                nullptr,
+                450
+            )->show();
+        }
+    );
     layerListInfoButton->setPosition(92,20);
     layerListInfoButton->setScale(0.5f);
 
     m_layerListLabel->addChild(layerListInfoButton);
+
+    //setup info
+    auto setupInfoButton = Button::createWithSpriteFrameName("GJ_infoIcon_001.png", 
+        [this](Button*) {
+            std::string infoStr = ""
+            "<cs>Parallax setups</c> are the triggers that make up a parallax effect.\n"
+            "Setups consist of an <cp>Area Move Trigger</c> and an <cg>Advanced Follow Trigger</c>.\n"
+            "The <cp>Area Move Trigger</c> makes an object that i call the <cp>\"Root Object\"</c> follow the center of the camera.\n"
+            "Then, since regular follow triggers cant directly follow area move objects, the <cg>Advanced Follow Trigger</c> makes an object"
+            " that i call the <cg>\"Follow Object\"</c> follow the <cp>\"Root Object\"</c>.\n"
+            "After that, each layer consists of a <cd>Follow Trigger</c> and a <cf>Scale Trigger</c> that are able to follow the <cg>\"Follow Object\"</c>.\n";
+
+            //maybe add some kind of diagram here
+
+            FLAlertLayer::create(
+                nullptr,
+                "Info",
+                infoStr,
+                "ok",
+                nullptr,
+                500
+            )->show();
+        }
+    );
+    setupInfoButton->setScale(0.5f);
+    setupInfoButton->setPosition(m_setupSettingsBackground->getContentSize());
+
+    m_setupSettingsBackground->addChild(setupInfoButton);
+    
 }
 void ParallaxMenuPopup::initLayerList()
 {
@@ -342,18 +371,18 @@ bool ParallaxMenuPopup::init()
     constexpr float setupOptionsBackgroundWidth = 170.0f;
     constexpr float setupOptionsWidth = setupOptionsBackgroundWidth-(2*padAmount);
 
-    auto setupOptionsBackground = NineSlice::create("square02b_001.png");
-    setupOptionsBackground->setColor({0, 0, 0});
-    setupOptionsBackground->setOpacity(44);
-    setupOptionsBackground->setAnchorPoint({0.0f,0.5f});
-    setupOptionsBackground->setPosition(padAmount,popupHeight/2);
-    m_mainLayer->addChild(setupOptionsBackground);
+    m_setupSettingsBackground = NineSlice::create("square02b_001.png");
+    m_setupSettingsBackground->setColor({0, 0, 0});
+    m_setupSettingsBackground->setOpacity(44);
+    m_setupSettingsBackground->setAnchorPoint({0.0f,0.5f});
+    m_setupSettingsBackground->setPosition(padAmount,popupHeight/2);
+    m_mainLayer->addChild(m_setupSettingsBackground);
 
 
 
     //the setup actions
     auto m_setupActionMenu = CCMenu::create();
-    setupOptionsBackground->addChild(m_setupActionMenu);
+    m_setupSettingsBackground->addChild(m_setupActionMenu);
     m_setupActionMenu->setPosition(setupOptionsBackgroundWidth/2.0f,constants::ui::PADDING);
     //calculate stuff with the action menu for the buttons
     constexpr float BUTTON_HEIGHT = 30.0f;
@@ -388,7 +417,7 @@ bool ParallaxMenuPopup::init()
     */
     constexpr float durationInputScale = 0.5f;
     auto durationInputMenu = CCMenu::create();
-    setupOptionsBackground->addChild(durationInputMenu);
+    m_setupSettingsBackground->addChild(durationInputMenu);
 
     m_durationInput = CustomNumberInput::create(100.0f);
 
@@ -497,11 +526,11 @@ bool ParallaxMenuPopup::init()
 
     rootIDMenu->setPosition(setupOptionsBackgroundWidth/2,110);
 
-    setupOptionsBackground->addChild(rootIDMenu);
+    m_setupSettingsBackground->addChild(rootIDMenu);
     rootIDMenu->updateLayout();
 
     //resize the background
-    setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,150.0f});
+    m_setupSettingsBackground->setContentSize({setupOptionsBackgroundWidth,150.0f});
 
 
     //create the ok button that closes the ui

@@ -28,6 +28,7 @@ protected:
     Button* m_addLayerButton = nullptr;
     Button* m_sortButton = nullptr;
     //setup actions
+    NineSlice* m_setupSettingsBackground = nullptr;
     CCMenu* m_setupActionMenu = nullptr;
     std::vector<Button*> m_setupActionButtons;//buttons that get disabled when theres no setup
     //layer list
