@@ -16,6 +16,9 @@
 		"alphalaneous.alphas-ui-pack": ">=v1.4.0",
 		"nwo5.silly-api": ">=2.2.0"
 	},
+	"tags":[
+		"editor","interface","offline"
+	],
 	"resources": {
 		"sprites": [
 			"resources/*.png"
