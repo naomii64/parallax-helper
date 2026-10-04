@@ -8,9 +8,9 @@
 	},
 	"id": "naomii64.parallax-helper",
 	"name": "parallax helper",
-	"version": "1.0.0",
+	"version": "1.0.0-beta.1",
 	"developer": "naomii64",
-	"description": "A mod that manages parallax effects in levels to make it easier.",
+	"description": "A mod that makes adding depth to your levels easier.",
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3",
 		"alphalaneous.alphas-ui-pack": ">=v1.4.0",

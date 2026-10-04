@@ -30,7 +30,9 @@ protected:
     //setup actions
     NineSlice* m_setupSettingsBackground = nullptr;
     CCMenu* m_setupActionMenu = nullptr;
-    std::vector<Button*> m_setupActionButtons;//buttons that get disabled when theres no setup
+    std::vector<Button*> m_disableWhenNoSetup;
+    std::vector<CCNode*> m_hideWhenNoSetup;
+    Label* m_setupOptionsHint = nullptr;
     //layer list
     NineSlice* m_layerListBackground = nullptr;
     CCMenu* m_layerListMenu = nullptr;
@@ -83,8 +85,8 @@ protected:
 
     //the current setup can probably be passed into a lot of these so it only has to be gotten once
 
-    void updateSetupActionButtons();
-    void updateLayerListHint();
+    void updateDisabledAndHiddenButtons();
+    void updateHints();
     void updateSetupSelector();
     void updateSetupDurationInput();//this only really needs to be called when switching setups
     void updateRootIDButton();

@@ -32,7 +32,7 @@ int ph::Utils::getNextFreeGroupID()
     return editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
 }
 
-Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::ButtonCallback callback, const std::string& labelText,float width,float height,const std::string& backgroundSprite)
+Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::ButtonCallback callback, const std::string& labelText,float width,float height,const std::string& iconSpritePath,const std::string& backgroundSprite)
 {
 
     auto btn = Button::create(std::move(callback));
@@ -48,14 +48,41 @@ Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::Butto
     btn->setContentSize({width,height});
     bg->setContentSize(btn->getContentSize());
 
+    constexpr float LABEL_SCALE = 0.5f;
     auto label = Label::create(labelText,"bigFont.fnt");
     label->setLayoutOptions(
         AnchorLayoutOptions::create()
         ->setAnchor(Anchor::Center)
     );
-    label->setScale(0.5f);
+    label->setScale(LABEL_SCALE);
     btn->addChild(label);
 
+    if(!iconSpritePath.empty()){
+        //add the icon
+        auto iconSprite = CCSprite::create(iconSpritePath.c_str());
+        float xOffset = -(label->getContentWidth())/2.0f;
+        xOffset*=LABEL_SCALE;
+        iconSprite->setScale(0.8);
+        iconSprite->setAnchorPoint({1.0f,0.5f});
+
+        //offset the text and the icon so that theyre centered
+        float offsetText = iconSprite->getContentWidth()*iconSprite->getScale()*0.5f;
+
+        iconSprite->setLayoutOptions(
+            AnchorLayoutOptions::create()
+            ->setAnchor(Anchor::Center)
+            ->setOffset({xOffset+offsetText,0.0f})
+        );
+
+
+        static_cast<AnchorLayoutOptions*>(label->getLayoutOptions())->setOffset({offsetText,0.0f});
+
+        btn->addChild(iconSprite);
+    }
+
+    //make the text more centered on the y
+    auto labelLayoutOptions = static_cast<AnchorLayoutOptions*>(label->getLayoutOptions());
+    labelLayoutOptions->setOffset({labelLayoutOptions->getOffset().x,1.0f});
 
 
     btn->updateLayout();

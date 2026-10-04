@@ -108,7 +108,10 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     //this is important idk how to work this into the ui though
     //maybe one day ill add a layer settings menu and put this there
     //i hate ui design
-    auto addLayerToSelectedObjectsButton = Button::createWithNode(ButtonSprite::create("Add To Selected"),
+    auto btnSprite = ButtonSprite::create("Add To Selected");
+    btnSprite->setCascadeColorEnabled(true);
+    btnSprite->setCascadeOpacityEnabled(true);
+    auto addLayerToSelectedObjectsButton = Button::createWithNode(btnSprite,
         [this](Button* btn){
             auto setup = m_layerPtr->m_parentSetupPtr;
             if(!setup) return;
@@ -126,6 +129,11 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     addLayerToSelectedObjectsButton->setPosition(175.f,0.f);
     addLayerToSelectedObjectsButton->setScale(0.4f);
     addLayerToSelectedObjectsButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Add Layer To Selected Objects"));
+
+    //this is important too for now (until i move this button)
+    if(editor::selection::empty()){
+        Utils::disableButton(addLayerToSelectedObjectsButton);
+    }
 
     addChild(addLayerToSelectedObjectsButton);
 

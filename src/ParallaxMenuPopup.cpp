@@ -395,20 +395,20 @@ bool ParallaxMenuPopup::init()
         return (float(layer)*Y_DIST_BETWEEN_BUTTON_POSITIONS)+(BUTTON_HEIGHT*SCALE_HEIGHT*0.5f);
     };
 
-    auto createSetupActionBtn = [&](geode::Button::ButtonCallback callback,const std::string& label,float width,const CCPoint& pos,const std::string& bgSprite = "GJ_button_01.png"){
-        auto btn = Utils::createButtonWithALittleIconNextToTheText(std::move(callback),label,width/SCALE_HEIGHT,BUTTON_HEIGHT,bgSprite);
+    auto createSetupActionBtn = [&](geode::Button::ButtonCallback callback,const std::string& label,const std::string& icon,float width,const CCPoint& pos,const std::string& bgSprite = "GJ_button_01.png"){
+        auto btn = Utils::createButtonWithALittleIconNextToTheText(std::move(callback),label,width/SCALE_HEIGHT,BUTTON_HEIGHT,icon,bgSprite);
         btn->setScale(SCALE_HEIGHT);
         btn->setPosition(pos);
         m_setupActionMenu->addChild(btn);
-        m_setupActionButtons.push_back(btn);
+        m_hideWhenNoSetup.push_back(btn);
         return btn;
     };
 
-    createSetupActionBtn([this](Button* btn){onFindSetupInEditorButton(btn);},"Find Triggers",ACTION_MENU_HALF_BTN_WIDTH,{-(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
-    createSetupActionBtn([this](Button* btn){onFindCenterButton(btn);},"Find Center",ACTION_MENU_HALF_BTN_WIDTH,{(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
+    createSetupActionBtn([this](Button* btn){onFindSetupInEditorButton(btn);},"Find Triggers","icon_find.png"_spr,ACTION_MENU_HALF_BTN_WIDTH,{-(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
+    createSetupActionBtn([this](Button* btn){onFindCenterButton(btn);},"Find Center","icon_find.png"_spr,ACTION_MENU_HALF_BTN_WIDTH,{(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
 
-    createSetupActionBtn([this](Button* btn){onCleanupTriggersButton(btn);},"Clean Up Triggers",ACTION_MENU_WIDTH,{0.0f,getYForLayer(1)})->setScaleMultiplier(1.125);
-    createSetupActionBtn([this](Button* btn){onDeleteSetupButton(btn);},"Delete Setup",ACTION_MENU_WIDTH,{0.0f,getYForLayer(0)},"GJ_button_06.png")->setScaleMultiplier(1.125);
+    createSetupActionBtn([this](Button* btn){onCleanupTriggersButton(btn);},"Clean Up Triggers","icon_clean.png"_spr,ACTION_MENU_WIDTH,{0.0f,getYForLayer(1)})->setScaleMultiplier(1.125);
+    createSetupActionBtn([this](Button* btn){onDeleteSetupButton(btn);},"Delete Setup","icon_delete.png"_spr,ACTION_MENU_WIDTH,{0.0f,getYForLayer(0)},"GJ_button_06.png")->setScaleMultiplier(1.125);
 
     m_setupActionMenu->updateLayout();
 
@@ -448,9 +448,12 @@ bool ParallaxMenuPopup::init()
     durationInputMenu->setScale(durationInputScale);
     durationInputMenu->updateLayout();
 
+    m_hideWhenNoSetup.push_back(durationInputMenu);
 
     //create the root id and follow id buttons
     auto rootIDMenu = CCMenu::create();
+    m_hideWhenNoSetup.push_back(rootIDMenu);
+    
     rootIDMenu->setLayout(AnchorLayout::create());
     rootIDMenu->setContentSize({0,0});
 
@@ -500,7 +503,6 @@ bool ParallaxMenuPopup::init()
         popup->show();
     });
     m_setupRootIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Root ID"));
-    m_setupActionButtons.push_back(m_setupRootIDButton);
 
     m_setupFollowIDButton = createRootOrFollowMenu("Follow ID",nwo5::editor::trigger::ADVANCED_FOLLOW_TRIGGER,SetupIDButtonOffset,[this](Button*){
         auto setup = getSelectedSetup();
@@ -522,16 +524,24 @@ bool ParallaxMenuPopup::init()
         popup->show();
     });
     m_setupFollowIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Follow ID"));
-    m_setupActionButtons.push_back(m_setupFollowIDButton);
 
     rootIDMenu->setPosition(setupOptionsBackgroundWidth/2,110);
 
     m_setupSettingsBackground->addChild(rootIDMenu);
     rootIDMenu->updateLayout();
 
+
     //resize the background
     m_setupSettingsBackground->setContentSize({setupOptionsBackgroundWidth,150.0f});
 
+
+    //create the hint
+    m_setupOptionsHint = Label::create("(Press 'New' To Create A Setup)","bigFont.fnt");
+    m_setupOptionsHint->setColor(constants::ui::DISABLED_COLOR);
+    m_setupOptionsHint->setOpacity(constants::ui::DISABLED_ALPHA);
+    m_setupOptionsHint->setScale(0.3f);
+    m_setupOptionsHint->setPosition(m_setupSettingsBackground->getContentSize()/2.0f);
+    m_setupSettingsBackground->addChild(m_setupOptionsHint);
 
     //create the ok button that closes the ui
     auto okButton = Button::createWithNode(ButtonSprite::create("OK",0.8f),[this](Button*){
@@ -713,7 +723,7 @@ void ParallaxMenuPopup::onCreateQuickGradientButton(CCObject *)
     editor::layer()->updateGradientLayers();
 }
 
-void ParallaxMenuPopup::updateSetupActionButtons()
+void ParallaxMenuPopup::updateDisabledAndHiddenButtons()
 {
     auto setup = getSelectedSetup();
     //maybe just have a list so i dont have to manually add all these
@@ -721,21 +731,30 @@ void ParallaxMenuPopup::updateSetupActionButtons()
         Utils::enableButton(m_addLayerButton);
         Utils::enableButton(m_sortButton);
         //actions
-        for(auto& button : m_setupActionButtons)
+        for(auto& button : m_disableWhenNoSetup)
             Utils::enableButton(button);
+        
+        for(auto& button : m_hideWhenNoSetup)
+            button->setVisible(true);
+            
     }else{
         Utils::disableButton(m_addLayerButton);
         Utils::disableButton(m_sortButton);
         //actions
-        for(auto& button : m_setupActionButtons)
+        for(auto& button : m_disableWhenNoSetup)
             Utils::disableButton(button);
+        
+        for(auto& button : m_hideWhenNoSetup)
+            button->setVisible(false);
     }
 }
 
-void ParallaxMenuPopup::updateLayerListHint()
+void ParallaxMenuPopup::updateHints()
 {
     auto setup = getSelectedSetup();
     if(setup){
+        m_setupOptionsHint->setVisible(false);
+
         if(setup->m_layers.empty()){
             m_layerListHint->setVisible(true);
             m_layerListHint->setText("(Press add to create layers)");
@@ -743,6 +762,8 @@ void ParallaxMenuPopup::updateLayerListHint()
             m_layerListHint->setVisible(false);
         }
     }else{
+        m_setupOptionsHint->setVisible(true);
+
         m_layerListHint->setVisible(true);
         m_layerListHint->setText("(Create a setup to add layers)");
     }
@@ -1007,8 +1028,8 @@ ParallaxMenuPopup::~ParallaxMenuPopup()
 }
 void ParallaxMenuPopup::updateAllUI()
 {
-    updateSetupActionButtons();
-    updateLayerListHint();
+    updateDisabledAndHiddenButtons();
+    updateHints();
     updateSetupSelector();
     updateSetupDurationInput();
     updateRootIDButton();
