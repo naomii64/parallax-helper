@@ -28,10 +28,8 @@ protected:
     Button* m_addLayerButton = nullptr;
     Button* m_sortButton = nullptr;
     //setup actions
-    Button* m_findCenterButton = nullptr;
-    Button* m_findSetupButton = nullptr;
-    Button* m_cleanSetupButton = nullptr;
-    Button* m_deleteSetupButton = nullptr;
+    CCMenu* m_setupActionMenu = nullptr;
+    std::vector<Button*> m_setupActionButtons;//buttons that get disabled when theres no setup
     //layer list
     NineSlice* m_layerListBackground = nullptr;
     CCMenu* m_layerListMenu = nullptr;
@@ -88,9 +86,6 @@ protected:
     void updateLayerListHint();
     void updateSetupSelector();
     void updateSetupDurationInput();//this only really needs to be called when switching setups
-
-
-    //these dont get ran in updateAllUI
     void updateRootIDButton();
     void updateFollowIDButton();
 };

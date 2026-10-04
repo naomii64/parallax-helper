@@ -350,6 +350,39 @@ bool ParallaxMenuPopup::init()
     m_mainLayer->addChild(setupOptionsBackground);
 
 
+
+    //the setup actions
+    auto m_setupActionMenu = CCMenu::create();
+    setupOptionsBackground->addChild(m_setupActionMenu);
+    m_setupActionMenu->setPosition(setupOptionsBackgroundWidth/2.0f,constants::ui::PADDING);
+    //calculate stuff with the action menu for the buttons
+    constexpr float BUTTON_HEIGHT = 30.0f;
+    constexpr float SCALE_HEIGHT = 0.5f;//scales the height and gaps but not the width
+    constexpr float ACTION_MENU_WIDTH = setupOptionsBackgroundWidth-(constants::ui::PADDING*2);
+    constexpr float GAP_BETWEEN_BUTTONS = (constants::ui::PADDING/2.0f);
+    constexpr float ACTION_MENU_HALF_BTN_WIDTH = (ACTION_MENU_WIDTH-GAP_BETWEEN_BUTTONS)*0.5f;
+    constexpr float Y_DIST_BETWEEN_BUTTON_POSITIONS = GAP_BETWEEN_BUTTONS+(BUTTON_HEIGHT*SCALE_HEIGHT);
+    constexpr auto getYForLayer = [&](int layer){
+        return (float(layer)*Y_DIST_BETWEEN_BUTTON_POSITIONS)+(BUTTON_HEIGHT*SCALE_HEIGHT*0.5f);
+    };
+
+    auto createSetupActionBtn = [&](geode::Button::ButtonCallback callback,const std::string& label,float width,const CCPoint& pos,const std::string& bgSprite = "GJ_button_01.png"){
+        auto btn = Utils::createButtonWithALittleIconNextToTheText(std::move(callback),label,width/SCALE_HEIGHT,BUTTON_HEIGHT,bgSprite);
+        btn->setScale(SCALE_HEIGHT);
+        btn->setPosition(pos);
+        m_setupActionMenu->addChild(btn);
+        m_setupActionButtons.push_back(btn);
+        return btn;
+    };
+
+    createSetupActionBtn([this](Button* btn){onFindSetupInEditorButton(btn);},"Find Triggers",ACTION_MENU_HALF_BTN_WIDTH,{-(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
+    createSetupActionBtn([this](Button* btn){onFindCenterButton(btn);},"Find Center",ACTION_MENU_HALF_BTN_WIDTH,{(ACTION_MENU_WIDTH+GAP_BETWEEN_BUTTONS)/4.0f,getYForLayer(2)});
+
+    createSetupActionBtn([this](Button* btn){onCleanupTriggersButton(btn);},"Clean Up Triggers",ACTION_MENU_WIDTH,{0.0f,getYForLayer(1)})->setScaleMultiplier(1.125);
+    createSetupActionBtn([this](Button* btn){onDeleteSetupButton(btn);},"Delete Setup",ACTION_MENU_WIDTH,{0.0f,getYForLayer(0)},"GJ_button_06.png")->setScaleMultiplier(1.125);
+
+    m_setupActionMenu->updateLayout();
+
     /*
         add the duration input
     */
@@ -381,69 +414,25 @@ bool ParallaxMenuPopup::init()
         AxisLayout::create()
         ->setAxis(Axis::Row)
     );
-    durationInputMenu->setPosition(padAmount,padAmount+64);
-    durationInputMenu->setAnchorPoint({0.0f,0.0f});
+    durationInputMenu->setPosition(setupOptionsBackgroundWidth/2.0f,getYForLayer(3)+constants::ui::PADDING);
     durationInputMenu->setContentSize({setupOptionsWidth/durationInputScale,1.0f});
     durationInputMenu->setScale(durationInputScale);
     durationInputMenu->updateLayout();
 
-    
-    //the actions
-    constexpr float setupActionButtonSize = 33.0f;
-    constexpr float actionButtonScale = 0.75f;
-
-    auto setupActionMenu = CCMenu::create();
-    setupActionMenu->setLayout(
-        AxisLayout::create()
-        ->setAxis(Axis::Row)
-    );
-    setupActionMenu->setAnchorPoint({0.0f,0.0f});
-    setupActionMenu->setPosition(padAmount,30+64);
-    setupActionMenu->setContentSize({setupOptionsWidth/actionButtonScale,setupActionButtonSize});
-    setupActionMenu->setScale(actionButtonScale);
-    setupOptionsBackground->addChild(setupActionMenu);
-
-    m_findCenterButton = Button::createWithSpriteFrameName("gj_findBtn_001.png", [this](Button* btn) {
-        this->onFindCenterButton(btn);
-    });
-    m_findCenterButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Find Center Objects In Editor"));
-    setupActionMenu->addChild(m_findCenterButton);
-    m_findSetupButton = Button::createWithSpriteFrameName("gj_findBtn_001.png", [this](Button* btn) {
-        this->onFindSetupInEditorButton(btn);
-    });
-    m_findSetupButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Find Setup In Editor"));
-    setupActionMenu->addChild(m_findSetupButton);
-    m_cleanSetupButton = Button::createWithSprite("CleanUpButton.png"_spr, [this](Button* btn) {
-        this->onCleanupTriggersButton(btn);
-    });
-    m_cleanSetupButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Clean Up Setup"));
-    setupActionMenu->addChild(m_cleanSetupButton);
-    m_deleteSetupButton = Button::createWithSprite("deleteButton.png"_spr, [this](Button* btn) {
-        this->onDeleteSetupButton(btn);
-    });
-    m_deleteSetupButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Delete Setup"));
-    setupActionMenu->addChild(m_deleteSetupButton);
-    
-
-    setupActionMenu->updateLayout();
-
-    //just make sure this matches up
-    m_findSetupButton->setContentSize({setupActionButtonSize,setupActionButtonSize});
-    m_cleanSetupButton->setContentSize({setupActionButtonSize,setupActionButtonSize});
 
     //create the root id and follow id buttons
     auto rootIDMenu = CCMenu::create();
     rootIDMenu->setLayout(AnchorLayout::create());
     rootIDMenu->setContentSize({0,0});
 
-    auto createRootOrFollowMenu = [&](const geode::ZStringView& label,int triggerObjID,float yoffset, geode::Button::ButtonCallback btncb){
+    auto createRootOrFollowMenu = [&](const geode::ZStringView& label,int triggerObjID,float xoffset, geode::Button::ButtonCallback btncb){
 
-        auto rootIDMenuLabel = Label::create(label,"bigFont.fnt");
-        rootIDMenuLabel->setAnchorPoint({1.0f,0.5f});
+        auto rootIDMenuLabel = Label::create(label,"goldFont.fnt");
+        rootIDMenuLabel->setAnchorPoint({0.5f,0.5f});
         rootIDMenuLabel->setLayoutOptions(
             AnchorLayoutOptions::create()
             ->setAnchor(Anchor::Right)
-            ->setOffset({-16.0,yoffset})
+            ->setOffset({xoffset,25.f})
         );
         rootIDMenuLabel->setScale(0.5f);
         //TODO: make an abstract way of creating a trigger button later
@@ -453,7 +442,7 @@ bool ParallaxMenuPopup::init()
         rootIDSpriteButton->setLayoutOptions(
             AnchorLayoutOptions::create()
             ->setAnchor(Anchor::Right)
-            ->setOffset({0.0,yoffset})
+            ->setOffset({xoffset,0.0f})
         );
 
         rootIDMenu->addChild(rootIDMenuLabel);
@@ -461,7 +450,8 @@ bool ParallaxMenuPopup::init()
 
         return rootIDSpriteButton;
     };    
-    m_setupRootIDButton = createRootOrFollowMenu("Root ID:",nwo5::editor::trigger::AREA_MOVE_TRIGGER,16,[this](Button*){
+    constexpr float SetupIDButtonOffset = setupOptionsBackgroundWidth/5.f;
+    m_setupRootIDButton = createRootOrFollowMenu("Root ID",nwo5::editor::trigger::AREA_MOVE_TRIGGER,-SetupIDButtonOffset,[this](Button*){
         auto setup = getSelectedSetup();
         if(!setup) return;
         
@@ -480,7 +470,10 @@ bool ParallaxMenuPopup::init()
         popup->m_numberInput->setNumber(setup->m_rootID);
         popup->show();
     });
-    m_setupFollowIDButton = createRootOrFollowMenu("follow ID:",nwo5::editor::trigger::ADVANCED_FOLLOW_TRIGGER,-16,[this](Button*){
+    m_setupRootIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Root ID"));
+    m_setupActionButtons.push_back(m_setupRootIDButton);
+
+    m_setupFollowIDButton = createRootOrFollowMenu("Follow ID",nwo5::editor::trigger::ADVANCED_FOLLOW_TRIGGER,SetupIDButtonOffset,[this](Button*){
         auto setup = getSelectedSetup();
         if(!setup) return;
         
@@ -499,16 +492,16 @@ bool ParallaxMenuPopup::init()
         popup->m_numberInput->setNumber(setup->m_followID);
         popup->show();
     });
-    
-    updateRootIDButton();
-    updateFollowIDButton();
-    rootIDMenu->setPosition(setupOptionsBackgroundWidth-padAmount,30);
+    m_setupFollowIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Follow ID"));
+    m_setupActionButtons.push_back(m_setupFollowIDButton);
+
+    rootIDMenu->setPosition(setupOptionsBackgroundWidth/2,110);
 
     setupOptionsBackground->addChild(rootIDMenu);
     rootIDMenu->updateLayout();
 
     //resize the background
-    setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,30+64+(setupActionButtonSize*actionButtonScale)+padAmount});
+    setupOptionsBackground->setContentSize({setupOptionsBackgroundWidth,150.0f});
 
 
     //create the ok button that closes the ui
@@ -699,18 +692,14 @@ void ParallaxMenuPopup::updateSetupActionButtons()
         Utils::enableButton(m_addLayerButton);
         Utils::enableButton(m_sortButton);
         //actions
-        Utils::enableButton(m_findCenterButton);
-        Utils::enableButton(m_findSetupButton);
-        Utils::enableButton(m_cleanSetupButton);
-        Utils::enableButton(m_deleteSetupButton);
+        for(auto& button : m_setupActionButtons)
+            Utils::enableButton(button);
     }else{
         Utils::disableButton(m_addLayerButton);
         Utils::disableButton(m_sortButton);
         //actions
-        Utils::disableButton(m_findCenterButton);
-        Utils::disableButton(m_findSetupButton);
-        Utils::disableButton(m_cleanSetupButton);
-        Utils::disableButton(m_deleteSetupButton);
+        for(auto& button : m_setupActionButtons)
+            Utils::disableButton(button);
     }
 }
 
@@ -872,6 +861,8 @@ void ParallaxMenuPopup::onFindCenterButton(CCObject *)
     }
 
     editor::update();//cuz theyre selected now
+
+    onClose(this);
 }
 
 void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
@@ -925,9 +916,9 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
         false
     );
 
-    rootObject->addToGroup(rootID);
-    followObject->addToGroup(followID);
-
+    editor::object::addGroup(rootObject,rootID);
+    editor::object::addGroup(followObject,followID);
+    
     editor::object::scale(rootObject,ph::settings::rootObjectScale.get());
     editor::object::scale(followObject,ph::settings::followObjectScale.get());
     
@@ -945,6 +936,8 @@ void ParallaxMenuPopup::onFindSetupInEditorButton(CCObject *)
 
     auto setupPosition = setup->m_areaMoveTriggerPtr->getPosition();
     editor::move(setupPosition);
+
+    onClose(this);
 }
 ParallaxMenuPopup *ParallaxMenuPopup::create()
 {
@@ -989,6 +982,8 @@ void ParallaxMenuPopup::updateAllUI()
     updateLayerListHint();
     updateSetupSelector();
     updateSetupDurationInput();
+    updateRootIDButton();
+    updateFollowIDButton();
 }
 void ParallaxMenuPopup::addLayerNodeToList(ParallaxSetupLayer *layer)
 {

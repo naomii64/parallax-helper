@@ -20,6 +20,9 @@ namespace ph::Utils{
 
     int getNextFreeGroupID();
 
+    //used for setup actions
+    Button* createButtonWithALittleIconNextToTheText(geode::Button::ButtonCallback callback,const std::string& labelText,float width, float height = 30.0f,const std::string& backgroundSprite = "GJ_button_01.png");
+
     void enableButton(Button* item);
     void disableButton(Button* item);    
     CCMenu* createTwoButtonMenu(std::function<void(bool)> callback,const char* btn1Title = "Cancel", const char* btn2Title = "Confirm");

@@ -129,6 +129,8 @@ void ParallaxSetupList::removeSetupByIndex(size_t index)
 ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTrigger, EffectGameObject *followTrigger)
 {
 	auto& newLayer = m_layers.emplace_back();
+	newLayer.m_parentSetupPtr = this;
+	
 	int layerGroupID = followTrigger->m_targetGroupID;
 
 	newLayer.m_layerID = layerGroupID;

@@ -6,6 +6,8 @@ using namespace geode::prelude;
 #include "Utils/constants.hpp"
 #include "Utils/Utils.hpp"
 
+class ParallaxSetup;
+
 class ParallaxSetupLayer {
 public:
     int m_layerID = 0;
@@ -31,6 +33,8 @@ public:
     cocos2d::CCPoint getEditorPosition();
 
     bool hasScaleTrigger() const;
+
+    ParallaxSetup* m_parentSetupPtr = nullptr;
 };
 
 class ParallaxSetup {

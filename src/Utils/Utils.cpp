@@ -32,6 +32,37 @@ int ph::Utils::getNextFreeGroupID()
     return editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
 }
 
+Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::ButtonCallback callback, const std::string& labelText,float width,float height,const std::string& backgroundSprite)
+{
+
+    auto btn = Button::create(std::move(callback));
+
+    auto bg = NineSlice::create(backgroundSprite);
+    btn->setLayout(CopySizeLayout::create());
+    bg->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Center)
+    );
+    btn->addChild(bg);
+    
+    btn->setContentSize({width,height});
+    bg->setContentSize(btn->getContentSize());
+
+    auto label = Label::create(labelText,"bigFont.fnt");
+    label->setLayoutOptions(
+        AnchorLayoutOptions::create()
+        ->setAnchor(Anchor::Center)
+    );
+    label->setScale(0.5f);
+    btn->addChild(label);
+
+
+
+    btn->updateLayout();
+
+    return btn;
+}
+
 void Utils::enableButton(Button *item)
 {
     item->setEnabled(true);

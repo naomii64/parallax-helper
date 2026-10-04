@@ -105,6 +105,30 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 
     addChild(m_layerGroupIDButton);
 
+    //this is important idk how to work this into the ui though
+    //maybe one day ill add a layer settings menu and put this there
+    //i hate ui design
+    auto addLayerToSelectedObjectsButton = Button::createWithNode(ButtonSprite::create("Add To Selected"),
+        [this](Button* btn){
+            auto setup = m_layerPtr->m_parentSetupPtr;
+            if(!setup) return;
+
+            //remove the other group ids
+            for(auto& layer : setup->m_layers){
+                editor::object::removeGroup(editor::selection::get(),layer.m_layerID);
+            }
+
+            //add the group id
+            editor::object::addGroup(editor::selection::get(),m_layerPtr->m_layerID);
+        }
+    );
+    //give it temporary stuff rn
+    addLayerToSelectedObjectsButton->setPosition(175.f,0.f);
+    addLayerToSelectedObjectsButton->setScale(0.4f);
+    addLayerToSelectedObjectsButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Add Layer To Selected Objects"));
+
+    addChild(addLayerToSelectedObjectsButton);
+
     updateLayout();
 
     setLayer(layer);
