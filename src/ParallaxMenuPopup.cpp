@@ -1018,13 +1018,13 @@ void ParallaxMenuPopup::scrollToLayerIndex(int index)
 }
 ParallaxMenuPopup::~ParallaxMenuPopup()
 {
-    Popup::~Popup();
-
+    
     if(m_upListener)
         m_upListener->destroy();
 	
     if(m_downListener)
         m_downListener->destroy();
+
 }
 void ParallaxMenuPopup::updateAllUI()
 {

@@ -16,7 +16,6 @@ SortPopup* SortPopup::create(geode::Function<void(SortPopup*)> callback) {
 SortPopup::~SortPopup()
 {
     m_callback(this);
-    Popup::~Popup();
 }
 
 int SortPopup::getSelectedSortingID() const
