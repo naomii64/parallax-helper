@@ -1,6 +1,5 @@
 # 1.0.1
- - litterally nothing.
- - just fixing a bug with the geode index.
+- Changed the version number
 
 # 1.0.0
 - Fixed crashes involving destructors on mac.
