@@ -1,3 +1,6 @@
+# 1.0.2
+- Added github link to mod.json
+
 # 1.0.1
 - Changed the version number
 

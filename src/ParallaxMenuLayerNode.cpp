@@ -62,17 +62,19 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
 
     setLayout(AnchorLayout::create());
 
+    //make the bg
+    //auto bg = CCSprite::createWithSpriteFrameName("whiteSquare20_001.png");
+    //Utils::scaleToPixels(bg,size);
+    //bg->setAnchorPoint({0.0f,0.0f});
+    //addChild(bg);
+
     initDepthInput();
 
     //make the line 
     constexpr float lineThickness = 2.0f;
     auto line = CCSprite::createWithSpriteFrameName("whiteSquare20_001.png");
-    //the sprite is 10x10
-    constexpr float baseSpriteSize = 10.0f;
-    line->setContentSize({baseSpriteSize,baseSpriteSize});
     //scale it 
-    line->setScaleX(size.width/baseSpriteSize);
-    line->setScaleY(lineThickness/baseSpriteSize);
+    Utils::scaleToPixels(line,{size.width,lineThickness});
     //set the color
     line->setColor({0,0,0});
     line->setOpacity(50);

@@ -90,6 +90,11 @@ Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::Butto
     return btn;
 }
 
+void ph::Utils::scaleToPixels(CCNode *node, const cocos2d::CCSize &sizePixels)
+{
+    node->setScale(sizePixels.width/node->getContentWidth(),sizePixels.height/node->getContentHeight());
+}
+
 void Utils::enableButton(Button *item)
 {
     item->setEnabled(true);

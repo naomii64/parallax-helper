@@ -7,8 +7,8 @@
 		"ios": "2.2081"
 	},
 	"id": "naomii64.parallax-helper",
-	"name": "parallax helper",
-	"version": "1.0.1",
+	"name": "Parallax Helper",
+	"version": "1.0.2",
 	"developer": "naomii64",
 	"description": "A mod that makes adding depth to your levels easier.",
 	"dependencies": {
@@ -23,6 +23,9 @@
 		"sprites": [
 			"resources/*.png"
 		]
+	},
+	"links": {
+		"source": "https://github.com/naomii64/parallax-helper"
 	},
 	"settings": {
 		"title-colors": {
