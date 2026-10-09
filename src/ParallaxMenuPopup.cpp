@@ -76,8 +76,7 @@ void ParallaxMenuPopup::initSetupSwitcher()
         this->loadSetupLayerList(getSelectedSetup());
         this->updateAllUI();
 	});
-    auto nextButtonSprite = m_setupSwitcherNextButton->getChildByType<CCSprite>();
-    nextButtonSprite->setFlipX(true);
+    Utils::flipButtonSprite(m_setupSwitcherNextButton);
 
     m_setupSwitcherPrevButton->setPosition({0.0,setupSwitcherHeight/2});
     m_setupSwitcherNextButton->setPosition({setupSwitcherWidth,setupSwitcherHeight/2});
@@ -193,13 +192,9 @@ void ParallaxMenuPopup::initInfoButtons()
 void ParallaxMenuPopup::initLayerList()
 {
 
-    m_layerListBackground = NineSlice::create("square02b_001.png");
-    m_layerListBackground->setColor({0, 0, 0});
-    m_layerListBackground->setOpacity(44);
+    m_layerListBackground = Utils::createBlackBackgroundSquare({layerListWidth,layerListHeight});
     m_layerListBackground->setAnchorPoint({1.0f,0.0f});
 
-    m_layerListBackground->setContentSize({layerListWidth,layerListHeight});
-    
     m_layerListBackground->setLayoutOptions(
         AnchorLayoutOptions::create()
         ->setAnchor(Anchor::BottomRight)
@@ -278,7 +273,7 @@ void ParallaxMenuPopup::initDevButtons()
 }
 
 //todo: clean up this init ui function
-bool ParallaxMenuPopup::init()
+bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
 {
 
     if (!Popup::init({popupWidth, popupHeight})) return false;
@@ -291,7 +286,7 @@ bool ParallaxMenuPopup::init()
     tooltip->setScale(0.5f);//scale this down
     m_mainLayer->addChild(tooltip);
     
-    m_parallaxSetupList.scanEditorForSetups(editor::layer());
+    m_parallaxSetupList = setupList;
     
     initLayerList();
 
@@ -775,7 +770,7 @@ void ParallaxMenuPopup::updateSetupSelector()
     if(!m_setupSelectorLabel) return;
 
     bool enablePrev = m_selectedSetupIndex>0;
-    bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList.m_setups.size());
+    bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList->m_setups.size());
 
     if(enablePrev) Utils::enableButton(m_setupSwitcherPrevButton);
     else Utils::disableButton(m_setupSwitcherPrevButton);
@@ -784,7 +779,7 @@ void ParallaxMenuPopup::updateSetupSelector()
     else Utils::disableButton(m_setupSwitcherNextButton);
     
 
-    int setupCount = m_parallaxSetupList.m_setups.size();
+    int setupCount = m_parallaxSetupList->m_setups.size();
     int setupIndex = (setupCount==0) ? 0 : m_selectedSetupIndex+1;
 
     m_setupSelectorLabel->setText(fmt::format("{}/{}",setupIndex,setupCount));
@@ -877,10 +872,10 @@ void ParallaxMenuPopup::onDeleteSetupButton(CCObject *)
                 setup->deleteAllRootAndFollowObjects();
             
                 //now remove the setup from the list and update the ui
-                m_parallaxSetupList.removeSetupByIndex(m_selectedSetupIndex);
+                m_parallaxSetupList->removeSetupByIndex(m_selectedSetupIndex);
 
                 //reload ui
-                size_t setupCount = m_parallaxSetupList.m_setups.size();
+                size_t setupCount = m_parallaxSetupList->m_setups.size();
                 if(m_selectedSetupIndex>=setupCount)
                     m_selectedSetupIndex = setupCount-1;
 
@@ -973,8 +968,8 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     editor::object::scale(followObject,ph::settings::followObjectScale.get());
     
     //add the new setup to the list and select it
-    m_selectedSetupIndex = m_parallaxSetupList.m_setups.size();
-    m_parallaxSetupList.addSetup(newAreaMoveTrigger,newAdvancedFollowTrigger);
+    m_selectedSetupIndex = m_parallaxSetupList->m_setups.size();
+    m_parallaxSetupList->addSetup(newAreaMoveTrigger,newAdvancedFollowTrigger);
     loadSetupLayerList(getSelectedSetup());
     updateAllUI();
 }
@@ -989,10 +984,10 @@ void ParallaxMenuPopup::onFindSetupInEditorButton(CCObject *)
 
     onClose(this);
 }
-ParallaxMenuPopup *ParallaxMenuPopup::create()
+ParallaxMenuPopup *ParallaxMenuPopup::create(ParallaxSetupList* setupList)
 {
     auto ret = new ParallaxMenuPopup();
-    if (ret->init()) {
+    if (ret->init(setupList)) {
         ret->autorelease();
         return ret;
     }
@@ -1003,8 +998,8 @@ ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
 {
     //if m_selectedSetupIndex is changed to be an unsigned int later the less than zero check isnt needed
     if(m_selectedSetupIndex<0) return nullptr;
-    if(m_selectedSetupIndex>=m_parallaxSetupList.m_setups.size()) return nullptr;
-    return &m_parallaxSetupList.m_setups[m_selectedSetupIndex];
+    if(m_selectedSetupIndex>=m_parallaxSetupList->m_setups.size()) return nullptr;
+    return &m_parallaxSetupList->m_setups[m_selectedSetupIndex];
 }
 void ParallaxMenuPopup::scrollToLayerIndex(int index)
 {

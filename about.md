@@ -9,7 +9,6 @@
 There are also some features i plan to add in the future:
 - Tools for creating and managing many layers at a time
 - Tools for creating gradients fast
-- A parallax layer switcher similar to how the vanilla games editor layer switcher works. so you can edit all the objects on one parallax layer at a time
 - Conversion between units in 3D and depth values
 - maybe support for more types of setups and conversion between them
 - uhh probably some ui improvements

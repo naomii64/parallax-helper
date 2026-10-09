@@ -12,7 +12,7 @@ using namespace alpha::prelude;
 
 class ParallaxMenuPopup : public geode::Popup {
 public:
-    static ParallaxMenuPopup* create();
+    static ParallaxMenuPopup* create(ParallaxSetupList* setupList);
 
     ParallaxSetup* getSelectedSetup();
     void scrollToLayerIndex(int index);
@@ -20,7 +20,7 @@ public:
     ~ParallaxMenuPopup();
 protected:
 
-    ParallaxSetupList m_parallaxSetupList;
+    ParallaxSetupList* m_parallaxSetupList = nullptr;
 
     //layer list label
     Label* m_layerListLabel = nullptr;
@@ -57,7 +57,7 @@ protected:
     ListenerHandle* m_upListener = nullptr;
     ListenerHandle* m_downListener = nullptr;
 
-    bool init();
+    bool init(ParallaxSetupList* setupList);
     void initDevButtons();//this one can be commented out to hide the dev buttons
     void initSetupSwitcher();
     void initInfoButtons();

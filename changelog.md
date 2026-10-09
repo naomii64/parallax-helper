@@ -1,4 +1,6 @@
-# 1.0.2
+# 1.1.0
+- Added the parallax layer switcher
+- Added node IDs to some of GUI nodes
 - Added github link to mod.json
 
 # 1.0.1

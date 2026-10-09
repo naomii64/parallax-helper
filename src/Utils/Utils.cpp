@@ -90,9 +90,25 @@ Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::Butto
     return btn;
 }
 
+NineSlice *ph::Utils::createBlackBackgroundSquare(const CCSize& size,int opacity)
+{
+    auto bg = NineSlice::create("square02b_001.png");
+    bg->setColor({0, 0, 0});
+    bg->setOpacity(opacity);
+    bg->setContentSize(size);
+
+    return bg;
+}
+
 void ph::Utils::scaleToPixels(CCNode *node, const cocos2d::CCSize &sizePixels)
 {
     node->setScale(sizePixels.width/node->getContentWidth(),sizePixels.height/node->getContentHeight());
+}
+
+void ph::Utils::flipButtonSprite(Button *btn, bool flipped)
+{
+    auto nextButtonSprite = btn->getChildByType<CCSprite>();
+    nextButtonSprite->setFlipX(flipped);
 }
 
 void Utils::enableButton(Button *item)
