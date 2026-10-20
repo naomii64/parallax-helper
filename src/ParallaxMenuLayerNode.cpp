@@ -118,12 +118,8 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
             auto setup = m_layerPtr->m_parentSetupPtr;
             if(!setup) return;
 
-            //remove the other group ids
-            for(auto& layer : setup->m_layers){
-                editor::object::removeGroup(editor::selection::get(),layer.m_layerID);
-            }
-
-            //add the group id
+            setup->removeLayersFromObjects(editor::selection::get());
+            
             editor::object::addGroup(editor::selection::get(),m_layerPtr->m_layerID);
         }
     );

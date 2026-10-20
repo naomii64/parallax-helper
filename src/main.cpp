@@ -7,26 +7,29 @@ using namespace nwo5::editor::prelude;
 #include "ParallaxMenuPopup.hpp"
 #include "Utils/ParallaxLayerSwitcherMenu.hpp"
 
+#include "MyGameObject.hpp"
 
+
+bool shouldbeselectedfunction(CCObject* obj){
+	return static_cast<MyGameObject*>(obj)->m_fields->m_isOnSelectedParallaxLayer;
+}
 
 #include <Geode/modify/EditorUI.hpp>
 class $modify(MyEditorUI, EditorUI) {
 
 	struct Fields {
-		//create a setup list based on the level here for now
-		//testing here because of scope issues
 		ParallaxSetupList m_parallaxSetupList = ParallaxSetupList();
+		ParallaxLayerSwitcherMenu* m_parallaxLayerSwitcher = nullptr;
 	};
 
 	
 	bool init(LevelEditorLayer* p0) {
 	    if (!EditorUI::init(p0)) return false;
+		
+		//create a setup list based on the level here for now
+		m_fields->m_parallaxSetupList.scanEditorForSetups(editor::layer());
 
 		if (auto menu = this->getChildByID("editor-buttons-menu")) {
-
-			//create a setup list based on the level here for now
-			m_fields->m_parallaxSetupList.scanEditorForSetups(editor::layer());
-
 
 			auto btn = Button::createWithSprite("parallaxMenuButton.png"_spr, [this](Button*) {
 
@@ -46,34 +49,40 @@ class $modify(MyEditorUI, EditorUI) {
 		//now setup the parallax layer switcher
 		constexpr CCSize LAYER_SWITCHER_SIZE = {200.f,22.f};
 
-		auto parallaxLayerSwitcher = ParallaxLayerSwitcherMenu::create(LAYER_SWITCHER_SIZE);
+		m_fields->m_parallaxLayerSwitcher = ParallaxLayerSwitcherMenu::create(LAYER_SWITCHER_SIZE,&m_fields->m_parallaxSetupList);
 		
-		parallaxLayerSwitcher->setScale(.9f);
-		parallaxLayerSwitcher->setID("layer-switcher"_spr);
-		parallaxLayerSwitcher->setPosition(344.,193);//MOVE THIS LATER BEFORE RELEASING
+		m_fields->m_parallaxLayerSwitcher->setScale(.9f);
+		m_fields->m_parallaxLayerSwitcher->setID("layer-switcher"_spr);
+		m_fields->m_parallaxLayerSwitcher->setPosition(344.,193);//MOVE THIS LATER BEFORE RELEASING
 
-		this->addChild(parallaxLayerSwitcher);
-		m_uiItems->addObject(parallaxLayerSwitcher);
+		this->addChild(m_fields->m_parallaxLayerSwitcher);
+		m_uiItems->addObject(m_fields->m_parallaxLayerSwitcher);
 
 		updateLayout();
 		return true;
 	}
-};
 
+	bool canSelectObject(GameObject* object) {
+		if (!EditorUI::canSelectObject(object)) return false;
+		
+		if(!shouldbeselectedfunction(object)) return false;
 
-//placeholder test function
-bool shouldbeselectedfunction(CCObject* obj){
-	return true;
-	//lowk just only show move triggers for now
-	//return static_cast<GameObject*>(obj)->m_objectID == editor::trigger::MOVE_TRIGGER;
-}
-//name this better later and of course move it once i develop this more
-void filterObjectArray(CCArray* arr){
-	for(auto& obj : arr->asExt()){
-		if(!shouldbeselectedfunction(obj))
-			arr->removeObject(obj);
+		return true;
 	}
-}
+
+	void selectObjects(CCArray* objects, bool ignoreFilter) {
+		
+		auto validObjs = CCArray::create();
+
+		for(auto& obj : objects->asExt()){
+			if(shouldbeselectedfunction(obj))
+				validObjs->addObject(obj);
+		}
+
+		EditorUI::selectObjects(validObjs, ignoreFilter);
+	}
+
+};
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 class $modify(MyLevelEditorLayer, LevelEditorLayer) {
@@ -110,22 +119,27 @@ class $modify(MyLevelEditorLayer, LevelEditorLayer) {
 		}
 	}
 
-	CCArray* objectsAtPosition(CCPoint position) {
-		CCArray* ret = LevelEditorLayer::objectsAtPosition(position);
+	GameObject* createObject(int key, CCPoint position, bool noUndo) {
+		GameObject* ret = LevelEditorLayer::createObject(key, position, noUndo);
 		
-		filterObjectArray(ret);
+		if(!m_initializing){
+			auto myGameObj = static_cast<MyGameObject*>(ret);
+			//put this on the selected layer
+			//myGameObj->m_fields->m_isOnSelectedParallaxLayer = true;
+
+			auto myeditorUI = static_cast<MyEditorUI*>(editor::ui());
+			if(myeditorUI->m_fields->m_parallaxLayerSwitcher != nullptr){
+				auto setup = myeditorUI->m_fields->m_parallaxSetupList.getSelectedSetup();
+				auto layer = myeditorUI->m_fields->m_parallaxLayerSwitcher->getSelectedLayer();
+				if(layer){
+					editor::object::addGroup(ret,layer->m_layerID);
+				}
+			}
+
+		}
 
 		return ret;
 	}
-
-	CCArray* objectsInRect(CCRect rect, bool ignoreGroups) {
-		CCArray* ret = LevelEditorLayer::objectsInRect(rect, ignoreGroups);
-		
-		filterObjectArray(ret);
-		
-		return ret;
-	}
-
 
 	// void addSpecial(GameObject* object) {
 	// 	if(!m_initializing){

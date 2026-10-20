@@ -48,6 +48,9 @@ public:
     size_t getLayerCount() const;
     int getEditorLayer() const;
 
+    void removeLayersFromObject(GameObject *obj);
+    void removeLayersFromObjects(cocos2d::CCArray *objs);
+
     void setDuration(float duration);
 
     void deleteAllLayersAndLayerTriggers();
@@ -80,6 +83,10 @@ public:
 
     ParallaxSetup* addSetup(EnterEffectObject* areaMoveTrigger,AdvancedFollowTriggerObject* advancedFollowTrigger);
     void removeSetupByIndex(size_t index);
+
+    //this is here now
+    int m_selectedSetupIndex = 0;
+    ParallaxSetup* getSelectedSetup();
 private:
 
 };

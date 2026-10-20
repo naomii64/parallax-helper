@@ -49,7 +49,7 @@ protected:
     TriggerButton* m_setupRootIDButton = nullptr;
     TriggerButton* m_setupFollowIDButton = nullptr;
 
-    int m_selectedSetupIndex = 0;
+    //int m_selectedSetupIndex = 0;
 
     //allows for reuse of nodes to avoid crashes when deleting them
     int m_nextLayerListNode = 0;

@@ -67,12 +67,12 @@ void ParallaxMenuPopup::initSetupSwitcher()
 
     setupSwitcherMenu->setContentSize({setupSwitcherWidth,setupSwitcherHeight});
     m_setupSwitcherPrevButton = Button::createWithSpriteFrameName("GJ_arrow_01_001.png", [this](Button*) {
-        m_selectedSetupIndex--;
+        m_parallaxSetupList->m_selectedSetupIndex--;
         this->loadSetupLayerList(getSelectedSetup());
         this->updateAllUI();
     });
     m_setupSwitcherNextButton = Button::createWithSpriteFrameName("GJ_arrow_01_001.png", [this](Button*) {
-        m_selectedSetupIndex++;
+        m_parallaxSetupList->m_selectedSetupIndex++;
         this->loadSetupLayerList(getSelectedSetup());
         this->updateAllUI();
 	});
@@ -769,8 +769,8 @@ void ParallaxMenuPopup::updateSetupSelector()
     //exit if there is no setup selector
     if(!m_setupSelectorLabel) return;
 
-    bool enablePrev = m_selectedSetupIndex>0;
-    bool enableNext = (m_selectedSetupIndex+1)<(m_parallaxSetupList->m_setups.size());
+    bool enablePrev = m_parallaxSetupList->m_selectedSetupIndex>0;
+    bool enableNext = (m_parallaxSetupList->m_selectedSetupIndex+1)<(m_parallaxSetupList->m_setups.size());
 
     if(enablePrev) Utils::enableButton(m_setupSwitcherPrevButton);
     else Utils::disableButton(m_setupSwitcherPrevButton);
@@ -780,7 +780,7 @@ void ParallaxMenuPopup::updateSetupSelector()
     
 
     int setupCount = m_parallaxSetupList->m_setups.size();
-    int setupIndex = (setupCount==0) ? 0 : m_selectedSetupIndex+1;
+    int setupIndex = (setupCount==0) ? 0 : m_parallaxSetupList->m_selectedSetupIndex+1;
 
     m_setupSelectorLabel->setText(fmt::format("{}/{}",setupIndex,setupCount));
 }
@@ -872,12 +872,12 @@ void ParallaxMenuPopup::onDeleteSetupButton(CCObject *)
                 setup->deleteAllRootAndFollowObjects();
             
                 //now remove the setup from the list and update the ui
-                m_parallaxSetupList->removeSetupByIndex(m_selectedSetupIndex);
+                m_parallaxSetupList->removeSetupByIndex(m_parallaxSetupList->m_selectedSetupIndex);
 
                 //reload ui
                 size_t setupCount = m_parallaxSetupList->m_setups.size();
-                if(m_selectedSetupIndex>=setupCount)
-                    m_selectedSetupIndex = setupCount-1;
+                if(m_parallaxSetupList->m_selectedSetupIndex>=setupCount)
+                    m_parallaxSetupList->m_selectedSetupIndex = setupCount-1;
 
                 loadSetupLayerList(getSelectedSetup());
                 updateAllUI();
@@ -968,7 +968,7 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     editor::object::scale(followObject,ph::settings::followObjectScale.get());
     
     //add the new setup to the list and select it
-    m_selectedSetupIndex = m_parallaxSetupList->m_setups.size();
+    m_parallaxSetupList->m_selectedSetupIndex = m_parallaxSetupList->m_setups.size();
     m_parallaxSetupList->addSetup(newAreaMoveTrigger,newAdvancedFollowTrigger);
     loadSetupLayerList(getSelectedSetup());
     updateAllUI();
@@ -996,10 +996,7 @@ ParallaxMenuPopup *ParallaxMenuPopup::create(ParallaxSetupList* setupList)
 }
 ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
 {
-    //if m_selectedSetupIndex is changed to be an unsigned int later the less than zero check isnt needed
-    if(m_selectedSetupIndex<0) return nullptr;
-    if(m_selectedSetupIndex>=m_parallaxSetupList->m_setups.size()) return nullptr;
-    return &m_parallaxSetupList->m_setups[m_selectedSetupIndex];
+    return m_parallaxSetupList->getSelectedSetup();
 }
 void ParallaxMenuPopup::scrollToLayerIndex(int index)
 {

@@ -126,6 +126,13 @@ void ParallaxSetupList::removeSetupByIndex(size_t index)
 	m_setups.erase(m_setups.begin() + index);
 }
 
+ParallaxSetup *ParallaxSetupList::getSelectedSetup()
+{
+    if(m_selectedSetupIndex<0) return nullptr;
+    if(m_selectedSetupIndex>=m_setups.size()) return nullptr;
+    return &m_setups[m_selectedSetupIndex];
+}
+
 ParallaxSetupLayer *ParallaxSetup::addLayer(TransformTriggerGameObject *scaleTrigger, EffectGameObject *followTrigger)
 {
 	auto& newLayer = m_layers.emplace_back();
@@ -287,6 +294,17 @@ size_t ParallaxSetup::getLayerCount() const
 int ParallaxSetup::getEditorLayer() const
 {
     return m_areaMoveTriggerPtr->m_editorLayer;
+}
+
+void ParallaxSetup::removeLayersFromObject(GameObject *obj)
+{
+    for(auto& layer : m_layers)
+        editor::object::removeGroup(obj,layer.m_layerID);
+}
+void ParallaxSetup::removeLayersFromObjects(cocos2d::CCArray *objs)
+{
+    for(auto& layer : m_layers)
+        editor::object::removeGroup(objs,layer.m_layerID);
 }
 
 void ParallaxSetup::setDuration(float duration)
