@@ -6,6 +6,9 @@ using namespace nwo5::editor::prelude;
 
 void ParallaxSetupList::scanEditorForSetups(LevelEditorLayer* editorLayer)
 {				
+	//reset
+	m_setups.clear();
+
 	//the plan:
 	//1: find possible parallax roots in the form of area move triggers
 	//2: find the corresponding advanced follow triggers
@@ -152,8 +155,8 @@ ParallaxSetupLayer* ParallaxSetup::createNewLayer(float depth)
 	auto newTriggersPosition = getPositionForNewLayerTriggers();
 
     //first add the triggers
-    auto newScaleTrigger = static_cast<TransformTriggerGameObject*>(editor::object::createObject(trigger::SCALE_TRIGGER,newTriggersPosition,false));
-    auto newFollowTrigger = static_cast<EffectGameObject*>(editor::object::createObject(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false));
+    auto newScaleTrigger = editor::object::create<TransformTriggerGameObject*>(trigger::SCALE_TRIGGER,newTriggersPosition,false);
+    auto newFollowTrigger = editor::object::create<EffectGameObject*>(trigger::FOLLOW_TRIGGER,newTriggersPosition+CCPoint{editor::constants::GRID_SIZE,0.0f},false);
     //give them the correct groups
     int newLayerGroupID = Utils::getNextFreeGroupID();
     //set the target gid

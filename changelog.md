@@ -1,4 +1,6 @@
 # 1.1.0
+- Updated to GD version 2.2091
+- Added a keybind to bring up the parallax menu
 - Added the parallax layer switcher
 - Added node IDs to some of GUI nodes
 - Added github link to mod.json

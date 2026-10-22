@@ -25,7 +25,7 @@ void TriggerButton::addTrigger(int objectID)
     auto spr = CCSprite::create(Utils::getTriggerSprite(objectID).c_str());
     //spr->setContentSize({SPR_SIZE,SPR_SIZE});
     //spr->setScale(1.25f);
-    spr->setColor(nwo5::editor::trigger::color(objectID));
+    spr->setColor(nwo5::editor::trigger::spriteColor(objectID));
     spr->setLayoutOptions(
         AnchorLayoutOptions::create()
         ->setAnchor(Anchor::Center)

@@ -2,8 +2,13 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+//for testing the mod while alphas utils isnt avalible
+#define USE_ALPHAS_UTILS false
+
+#if USE_ALPHAS_UTILS
 #include <alphalaneous.alphas-ui-pack/include/API.hpp>
 using namespace alpha::prelude;
+#endif
 
 #include "ParallaxSetup.hpp"
 
@@ -17,6 +22,8 @@ public:
     ParallaxSetup* getSelectedSetup();
     void scrollToLayerIndex(int index);
     
+    void setCloseCallback(geode::Function<void()> callback);
+
     ~ParallaxMenuPopup();
 protected:
 
@@ -36,8 +43,12 @@ protected:
     //layer list
     NineSlice* m_layerListBackground = nullptr;
     CCMenu* m_layerListMenu = nullptr;
+
+    #if USE_ALPHAS_UTILS
     AdvancedScrollLayer* m_scrollLayer = nullptr;
     AdvancedScrollBar* m_layerListScrollBar = nullptr;
+    #endif
+    
     Label* m_layerListHint = nullptr;
     //setup switcher
     Button* m_setupSwitcherPrevButton = nullptr;
@@ -56,6 +67,8 @@ protected:
 
     ListenerHandle* m_upListener = nullptr;
     ListenerHandle* m_downListener = nullptr;
+
+    geode::Function<void()> m_onCloseCallback = nullptr;
 
     bool init(ParallaxSetupList* setupList);
     void initDevButtons();//this one can be commented out to hide the dev buttons

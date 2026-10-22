@@ -177,11 +177,11 @@ void ParallaxLayerSwitcherMenu::updateObjectLayerVisibility() {
     auto selectedLayer = getSelectedLayer();
 
     if(!selectedLayer){
-        for(auto& obj : static_cast<CCArrayExt<MyGameObject>>(editor::object::getAll())){
+        for(auto& obj : static_cast<CCArrayExt<MyGameObject>>(editor::objectArray())){
             obj->m_fields->m_isOnSelectedParallaxLayer = true;
         }
     }else{
-        for(auto& obj : static_cast<CCArrayExt<MyGameObject>>(editor::object::getAll())){
+        for(auto& obj : static_cast<CCArrayExt<MyGameObject>>(editor::objectArray())){
             obj->m_fields->m_isOnSelectedParallaxLayer = editor::object::hasGroup(obj,selectedLayer->m_layerID);
         }
     }

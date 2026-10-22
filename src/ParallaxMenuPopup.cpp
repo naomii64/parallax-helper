@@ -46,7 +46,11 @@ void ParallaxMenuPopup::loadSetupLayerList(ParallaxSetup *setup)
 
     //update everything in the right order
     m_layerListMenu->updateLayout();
+    
+    #if USE_ALPHAS_UTILS
     m_scrollLayer->updateLayout();
+    #endif
+
     m_layerListBackground->updateLayout();
 }
 
@@ -96,7 +100,7 @@ void ParallaxMenuPopup::initSetupSwitcher()
     newSetupButton->setPosition(120,setupSwitcherHeight/2);
     newSetupButton->setScale(0.6f);
     setupSwitcherMenu->addChild(newSetupButton);
-    newSetupButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Create New Setup"));
+    newSetupButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Create New Setup"));
 
     m_mainLayer->addChild(setupSwitcherMenu);
 }
@@ -216,7 +220,7 @@ void ParallaxMenuPopup::initLayerList()
         ->setAxisReverse(true)//so 0 is at the top
     );
     
-
+    #if USE_ALPHAS_UTILS
     m_scrollLayer = AdvancedScrollLayer::create({layerListWidth,LAYER_LIST_SCROLL_LAYER_HEIGHT});
     m_scrollLayer->setAnchorPoint({0.0f,0.0f});
     m_scrollLayer->setLayout(AxisLayout::create());
@@ -227,7 +231,11 @@ void ParallaxMenuPopup::initLayerList()
     m_layerListBackground->addChild(m_scrollLayer);
     m_layerListBackground->addChild(m_layerListScrollBar);
     m_scrollLayer->addChild(m_layerListMenu);
-    
+    #else
+    //if were not using alphas utils just attatch it directly its whatever ig
+    m_layerListBackground->addChild(m_layerListMenu);
+    #endif
+
     auto setup = getSelectedSetup();
     loadSetupLayerList(setup);
 }
@@ -282,7 +290,7 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
     m_closeBtn->setVisible(false);
 
     //initialize the tootip
-    auto tooltip = nwo5::ui::Tooltip::create("chatFont.fnt");
+    auto tooltip = nwo5::nodes::Tooltip::create("chatFont.fnt");
     tooltip->setScale(0.5f);//scale this down
     m_mainLayer->addChild(tooltip);
     
@@ -313,7 +321,7 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
             })->show();
         }
     );
-    m_sortButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Sorting"));
+    m_sortButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Change Sorting"));
 
     sortMenu->addChild(m_sortButton);
     sortMenu->updateLayout();
@@ -337,7 +345,7 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
             this->onAddLayerButton(btn);
         }
     );
-    m_addLayerButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Add Layer"));
+    m_addLayerButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Add Layer"));
     
     addLayerMenu->addChild(m_addLayerButton);
     addLayerMenu->updateLayout();
@@ -357,7 +365,12 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
     //add a label for the layer list
     m_layerListHint = Label::create("","bigFont.fnt");
     m_mainLayer->addChild(m_layerListHint);
-    m_layerListHint->setPosition(popupWidth-(padAmount*1.25f)-layerListWidth+(m_layerListScrollBar->getPositionX()/2),padAmount+(layerListHeight/2));
+    m_layerListHint->setPosition(popupWidth-(padAmount*1.25f)-layerListWidth
+    //messy code gulp
+    #if USE_ALPHAS_UTILS
+    +(m_layerListScrollBar->getPositionX()/2)
+    #endif
+    ,padAmount+(layerListHeight/2));
     m_layerListHint->setScale(0.3f);
     m_layerListHint->setColor(constants::ui::DISABLED_COLOR);
     m_layerListHint->setOpacity(constants::ui::DISABLED_ALPHA);
@@ -497,7 +510,7 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
         popup->m_numberInput->setNumber(setup->m_rootID);
         popup->show();
     });
-    m_setupRootIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Root ID"));
+    m_setupRootIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Change Root ID"));
 
     m_setupFollowIDButton = createRootOrFollowMenu("Follow ID",nwo5::editor::trigger::ADVANCED_FOLLOW_TRIGGER,SetupIDButtonOffset,[this](Button*){
         auto setup = getSelectedSetup();
@@ -518,7 +531,7 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
         popup->m_numberInput->setNumber(setup->m_followID);
         popup->show();
     });
-    m_setupFollowIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Follow ID"));
+    m_setupFollowIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Change Follow ID"));
 
     rootIDMenu->setPosition(setupOptionsBackgroundWidth/2,110);
 
@@ -555,12 +568,12 @@ bool ParallaxMenuPopup::init(ParallaxSetupList* setupList)
     m_mainLayer->updateLayout();
 
     //the inputs
-    m_upListener = listenForKeybindSettingPresses(ph::settings::keyLayerListUp.key(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+    m_upListener = listenForKeybindSettingPresses(ph::settings::keyLayerListUp.data()->getKey(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
         if (down) {
             this->changeFocusedLayer(-1);
         }
     });
-	m_downListener = listenForKeybindSettingPresses(ph::settings::keyLayerListDown.key(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+	m_downListener = listenForKeybindSettingPresses(ph::settings::keyLayerListDown.data()->getKey(), [this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
         if (down) {
             this->changeFocusedLayer(1);
         }
@@ -701,13 +714,14 @@ void ParallaxMenuPopup::onCreateQuickGradientButton(CCObject *)
         i++;
     }
     //now create the gradient trigger
-    auto gradientTrigger = static_cast<GradientTriggerObject*>(editor::object::createObject(
+    auto gradientTrigger = editor::object::create<GradientTriggerObject*>(
         editor::trigger::GRADIENT_TRIGGER,
         editor::ui()->getGridSnappedPos(editor::center())
-    ));
+    );
 
     gradientTrigger->m_vertexMode = true;
-    gradientTrigger->m_gradientID = editor::layer()->getNextFreeGradientID(constants::EMPTY_SET);
+    //fix this once bindings are found
+    gradientTrigger->m_gradientID = 0;//editor::layer()->getNextFreeGradientID(constants::EMPTY_SET);
     
     gradientTrigger->m_upBottomLeftID = vertexGroupIds[0];
     gradientTrigger->m_downBottomRightID = vertexGroupIds[1];
@@ -818,7 +832,10 @@ void ParallaxMenuPopup::onAddLayerButton(CCObject *){
     //next add it to the ui
     addLayerNodeToList(newLayer);
     m_layerListMenu->updateLayout();
+
+    #if USE_ALPHAS_UTILS
     m_scrollLayer->updateLayout();
+    #endif
 
     updateAllUI();
     //scroll to the index of the new
@@ -915,16 +932,16 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     auto newSetupPos = editor::ui()->getGridSnappedPos(editor::center());
 
     //first create the area move triggre
-    auto newAreaMoveTrigger = static_cast<EnterEffectObject*>(editor::object::createObject(
+    auto newAreaMoveTrigger = editor::object::create<EnterEffectObject*>(
         trigger::AREA_MOVE_TRIGGER,
         newSetupPos+CCPoint{0.0f,0.0f},
         false
-    ));
-    auto newAdvancedFollowTrigger = static_cast<AdvancedFollowTriggerObject*>(editor::object::createObject(
+    );
+    auto newAdvancedFollowTrigger = editor::object::create<AdvancedFollowTriggerObject*>(
         trigger::ADVANCED_FOLLOW_TRIGGER,
         newSetupPos+CCPoint{editor::constants::GRID_SIZE,0.0f},
         false
-    ));
+    );
 
     //setup the area move trigger
     //why is this making length and movedist 3000 and not 9000????
@@ -950,12 +967,12 @@ void ParallaxMenuPopup::onCreateSetupButton(CCObject *)
     int rootObjectID = ph::settings::rootObjectID.get();
     int followObjectID = ph::settings::followObjectID.get();
 
-    auto rootObject = editor::object::createObject(
+    auto rootObject = editor::object::create(
         rootObjectID,
         newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
         false
     );
-    auto followObject = editor::object::createObject(
+    auto followObject = editor::object::create(
         followObjectID,
         newSetupPos+CCPoint{0.0f,-editor::constants::GRID_SIZE},
         false
@@ -1000,6 +1017,7 @@ ParallaxSetup * ParallaxMenuPopup::getSelectedSetup()
 }
 void ParallaxMenuPopup::scrollToLayerIndex(int index)
 {
+    #if USE_ALPHAS_UTILS
     float targetY = LAYER_NODE_HEIGHT*float(index);
     //offset it to be the middle of the node
     targetY+=LAYER_NODE_HEIGHT/2.0f;
@@ -1007,6 +1025,11 @@ void ParallaxMenuPopup::scrollToLayerIndex(int index)
     targetY-=LAYER_LIST_SCROLL_LAYER_HEIGHT/2.0f;
 
     m_scrollLayer->setScrollY(targetY,true);
+    #endif
+}
+void ParallaxMenuPopup::setCloseCallback(geode::Function<void()> callback)
+{
+    m_onCloseCallback = std::move(callback);
 }
 ParallaxMenuPopup::~ParallaxMenuPopup()
 {
@@ -1016,6 +1039,9 @@ ParallaxMenuPopup::~ParallaxMenuPopup()
 	
     if(m_downListener)
         m_downListener->destroy();
+
+    if(m_onCloseCallback)
+        m_onCloseCallback();
 
 }
 void ParallaxMenuPopup::updateAllUI()

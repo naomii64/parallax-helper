@@ -7,16 +7,17 @@ using namespace geode::prelude;
 using namespace nwo5::editor::prelude;
 
 namespace ph::settings{
-    inline nwo5::settings::Setting<ccColor3B> depthLabelColorDefault{"depth-label-color-default"};
-    inline nwo5::settings::Setting<ccColor3B> depthLabelColorPositive{"depth-label-color-positive"};
-    inline nwo5::settings::Setting<ccColor3B> depthLabelColorNegative{"depth-label-color-negative"};
+    inline nwo5::cache::SettingCache<ccColor3B> depthLabelColorDefault{"depth-label-color-default"};
+    inline nwo5::cache::SettingCache<ccColor3B> depthLabelColorPositive{"depth-label-color-positive"};
+    inline nwo5::cache::SettingCache<ccColor3B> depthLabelColorNegative{"depth-label-color-negative"};
 
-    inline nwo5::settings::Setting<float> rootObjectScale{"float-root-object-scale"};
-	inline nwo5::settings::Setting<float> followObjectScale{"float-follow-object-scale"};
+    inline nwo5::cache::SettingCache<float> rootObjectScale{"float-root-object-scale"};
+	inline nwo5::cache::SettingCache<float> followObjectScale{"float-follow-object-scale"};
 		
-	inline nwo5::settings::Setting<int> rootObjectID{"int-root-object-ID"};
-	inline nwo5::settings::Setting<int> followObjectID{"int-follow-object-ID"};
+	inline nwo5::cache::SettingCache<int> rootObjectID{"int-root-object-ID"};
+	inline nwo5::cache::SettingCache<int> followObjectID{"int-follow-object-ID"};
 
-    inline nwo5::settings::Setting<std::vector<geode::Keybind>> keyLayerListUp{"keybind-layerlist-up"};
-    inline nwo5::settings::Setting<std::vector<geode::Keybind>> keyLayerListDown{"keybind-layerlist-down"};
+    inline nwo5::cache::SettingCache<std::vector<geode::Keybind>> keyOpenParallaxMenu{"keybind-open-parallax-menu"};
+    inline nwo5::cache::SettingCache<std::vector<geode::Keybind>> keyLayerListUp{"keybind-layerlist-up"};
+    inline nwo5::cache::SettingCache<std::vector<geode::Keybind>> keyLayerListDown{"keybind-layerlist-down"};
 };

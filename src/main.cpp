@@ -8,7 +8,9 @@ using namespace nwo5::editor::prelude;
 #include "Utils/ParallaxLayerSwitcherMenu.hpp"
 
 #include "MyGameObject.hpp"
+#include "Utils/Settings.hpp"
 
+#define BUILD_LAYER_SWITCHER false
 
 bool shouldbeselectedfunction(CCObject* obj){
 	return static_cast<MyGameObject*>(obj)->m_fields->m_isOnSelectedParallaxLayer;
@@ -19,9 +21,17 @@ class $modify(MyEditorUI, EditorUI) {
 
 	struct Fields {
 		ParallaxSetupList m_parallaxSetupList = ParallaxSetupList();
+
+		ListenerHandle* m_openPopupMenuKeybindListener = nullptr;
+		ParallaxMenuPopup* m_parallaxMenuPopup = nullptr;
+
 		ParallaxLayerSwitcherMenu* m_parallaxLayerSwitcher = nullptr;
 	};
 
+	~MyEditorUI(){
+		if(m_fields->m_openPopupMenuKeybindListener)
+			m_fields->m_openPopupMenuKeybindListener->destroy();
+	}
 	
 	bool init(LevelEditorLayer* p0) {
 	    if (!EditorUI::init(p0)) return false;
@@ -29,11 +39,30 @@ class $modify(MyEditorUI, EditorUI) {
 		//create a setup list based on the level here for now
 		m_fields->m_parallaxSetupList.scanEditorForSetups(editor::layer());
 
+		//TODO: make an actual method for this later
+		auto openParallaxMenuPopup = [this](){
+			if(!m_fields->m_parallaxMenuPopup){
+				//update the setup list
+				m_fields->m_parallaxSetupList.scanEditorForSetups(editor::layer());
+
+				//open the menu and make it close properly
+				m_fields->m_parallaxMenuPopup = ParallaxMenuPopup::create(&m_fields->m_parallaxSetupList);
+				m_fields->m_parallaxMenuPopup->setCloseCallback([this](){
+					m_fields->m_parallaxMenuPopup = nullptr;
+				});
+				m_fields->m_parallaxMenuPopup->show();
+			}
+		};
+
+		//setup the keybind
+		m_fields->m_openPopupMenuKeybindListener = listenForKeybindSettingPresses(ph::settings::keyOpenParallaxMenu.data()->getKey(),[openParallaxMenuPopup](Keybind const& keybind, bool down, bool repeat, double timestamp){
+			openParallaxMenuPopup();
+		});
+
 		if (auto menu = this->getChildByID("editor-buttons-menu")) {
 
-			auto btn = Button::createWithSprite("parallaxMenuButton.png"_spr, [this](Button*) {
-
-				ParallaxMenuPopup::create(&m_fields->m_parallaxSetupList)->show();
+			auto btn = Button::createWithSprite("parallaxMenuButton.png"_spr, [openParallaxMenuPopup](Button*) {
+				openParallaxMenuPopup();
 			});
 
 			btn->setContentSize({40, 40});
@@ -46,6 +75,7 @@ class $modify(MyEditorUI, EditorUI) {
 			m_uiItems->addObject(btn);
 		}
 
+		#if BUILD_LAYER_SWITCHER
 		//now setup the parallax layer switcher
 		constexpr CCSize LAYER_SWITCHER_SIZE = {200.f,22.f};
 
@@ -57,11 +87,14 @@ class $modify(MyEditorUI, EditorUI) {
 
 		this->addChild(m_fields->m_parallaxLayerSwitcher);
 		m_uiItems->addObject(m_fields->m_parallaxLayerSwitcher);
+		#endif
 
 		updateLayout();
 		return true;
 	}
 
+	#if BUILD_LAYER_SWITCHER
+	/* doesnt hook for now
 	bool canSelectObject(GameObject* object) {
 		if (!EditorUI::canSelectObject(object)) return false;
 		
@@ -69,7 +102,7 @@ class $modify(MyEditorUI, EditorUI) {
 
 		return true;
 	}
-
+	*/
 	void selectObjects(CCArray* objects, bool ignoreFilter) {
 		
 		auto validObjs = CCArray::create();
@@ -81,9 +114,10 @@ class $modify(MyEditorUI, EditorUI) {
 
 		EditorUI::selectObjects(validObjs, ignoreFilter);
 	}
-
+	#endif
 };
 
+#if BUILD_LAYER_SWITCHER
 #include <Geode/modify/LevelEditorLayer.hpp>
 class $modify(MyLevelEditorLayer, LevelEditorLayer) {
 	void updateVisibility(float dt) {	
@@ -158,7 +192,4 @@ class $modify(MyLevelEditorLayer, LevelEditorLayer) {
 	// }
 
 };
-
-$on_mod(Loaded) {
-    nwo5::settings::SettingsManager::get()->load();
-}
+#endif

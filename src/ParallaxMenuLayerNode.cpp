@@ -97,7 +97,7 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
         popup->m_numberInput->setNumber<int>(m_layerPtr->m_layerID);
         popup->show();
     });
-    m_layerGroupIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Change Group ID"));
+    m_layerGroupIDButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Change Group ID"));
     m_layerGroupIDButton->setPosition({25.0f,size.height/2});
     m_layerGroupIDButton->setScale(1.2f);
 
@@ -126,7 +126,7 @@ bool ParallaxMenuLayerNode::init(const cocos2d::CCSize &size,ParallaxSetupLayer*
     //give it temporary stuff rn
     addLayerToSelectedObjectsButton->setPosition(175.f,0.f);
     addLayerToSelectedObjectsButton->setScale(0.4f);
-    addLayerToSelectedObjectsButton->setUserObject("nwo5.silly-api/tooltip", nwo5::ui::TooltipInfo::create("Add Layer To Selected Objects"));
+    addLayerToSelectedObjectsButton->setUserObject("nwo5.silly-api/tooltip", nwo5::nodes::TooltipInfo::create("Add Layer To Selected Objects"));
 
     //this is important too for now (until i move this button)
     if(editor::selection::empty()){

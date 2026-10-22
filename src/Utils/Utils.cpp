@@ -29,7 +29,8 @@ void ph::Utils::replaceIDinObjects(int oldID, int newID)
 
 int ph::Utils::getNextFreeGroupID()
 {
-    return editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
+    return 9999; //fix this once the binding is found
+    //return editor::layer()->getNextFreeGroupID(constants::EMPTY_SET);
 }
 
 Button *ph::Utils::createButtonWithALittleIconNextToTheText(geode::Button::ButtonCallback callback, const std::string& labelText,float width,float height,const std::string& iconSpritePath,const std::string& backgroundSprite)

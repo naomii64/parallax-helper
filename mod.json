@@ -1,118 +1,140 @@
 {
-	"geode": "5.10.1",
-	"gd": {
-		"win": "2.2081",
-		"android": "2.2081",
-		"mac": "2.2081",
-		"ios": "2.2081"
-	},
-	"id": "naomii64.parallax-helper",
-	"name": "Parallax Helper",
-	"version": "1.1.0",
-	"developer": "naomii64",
-	"description": "A mod that makes adding depth to your levels easier.",
-	"dependencies": {
-		"geode.node-ids": ">=v1.23.3",
-		"alphalaneous.alphas-ui-pack": ">=v1.4.0",
-		"nwo5.silly-api": ">=2.2.0"
-	},
-	"tags":[
-		"editor","interface","offline"
-	],
-	"resources": {
-		"sprites": [
-			"resources/*.png"
-		]
-	},
-	"links": {
-		"source": "https://github.com/naomii64/parallax-helper"
-	},
-	"settings": {
-		"title-colors": {
-		    "type": "title",
-		    "name": "Colors"
-		},
-		"depth-label-color-default": {
-			"type": "rgb",
-			"name": "Default Depth Color",
-			"default": [255,255,255]
-		},
-		"depth-label-color-negative": {
-			"type": "rgb",	
-			"name": "Negative Depth Color",
-			"default": [170,215,255]
-		},
-		"depth-label-color-positive": {
-			"type": "rgb",
-			"name": "Positive Depth Color",
-			"default": [255,170,170]
-		},
-
-		"title-keybinds": {
-		    "type": "title",
-		    "name": "Keybinds"
-		},
-		"keybind-layerlist-up": {
-			"type":"keybind",
-			"name":"Up Layer List",
-			"default":["Up"],
-			"category": "editor",
-			"allow-in-text-inputs":true
-		},
-		"keybind-layerlist-down": {
-			"type":"keybind",
-			"name":"Down layer List",
-			"default":["Down"],
-			"category": "editor",
-			"allow-in-text-inputs":true
-		},
-		
-		"title-default-center-objects": {
-		    "type": "title",
-		    "name": "Center Object Settings"
-		},
-		"int-root-object-ID": {
-    		"type": "int",
-    		"name": "Root Object ID",
-			"default": 3816,
-			"description": "default is 3816 or particle face"
-		},
-		"float-root-object-scale": {
-    		"type": "float",
-    		"name": "Root Object scale",
-			"default":0.5,
-
-			"min": 0.0,
-    		"max": 4.0,
-			"control": {
-        		"arrows": true,
-        		"arrow-step": 0.1,
-				
-				"slider": true,
-        		"slider-step": 0.1
-    		}
-		},
-		"int-follow-object-ID": {
-    		"type": "int",
-    		"name": "Follow Object ID",
-			"default": 3805,
-			"description": "default is 3805 or particle square"
-		},
-		"float-follow-object-scale": {
-    		"type": "float",
-    		"name": "follow Object scale",
-			"default":1.0,
-
-			
-			"min": 0.0,
-    		"max": 4.0,
-			"control": {
-        		"arrows": true,
-        		"arrow-step": 0.1,
-				
-				"slider": true,
-        		"slider-step": 0.1
-    		}
-		}
-	}
+    "geode": "5.11.2",
+    "gd": {
+        "win": "2.2091",
+        "android": "2.2091",
+        "mac": "2.2091",
+        "ios": "2.2091"
+    },
+    "id": "naomii64.parallax-helper",
+    "name": "Parallax Helper",
+    "version": "1.1.0",
+    "developer": "naomii64",
+    "description": "A mod that makes adding depth to your levels easier.",
+    "dependencies": {
+        "geode.node-ids": {
+            "version": ">=v1.23.3",
+            "required": false
+        },
+        "nwo5.silly-api": ">=3.0.0"
+    },
+    "temporary-non-dependencies": {
+        "alphalaneous.alphas-ui-pack": ">=v1.4.0"
+    },
+    "tags": [
+        "editor",
+        "interface",
+        "offline"
+    ],
+    "resources": {
+        "sprites": [
+            "resources/*.png"
+        ]
+    },
+    "links": {
+        "source": "https://github.com/naomii64/parallax-helper"
+    },
+    "settings": {
+        "title-colors": {
+            "type": "title",
+            "name": "Colors"
+        },
+        "depth-label-color-default": {
+            "type": "rgb",
+            "name": "Default Depth Color",
+            "default": [
+                255,
+                255,
+                255
+            ]
+        },
+        "depth-label-color-negative": {
+            "type": "rgb",
+            "name": "Negative Depth Color",
+            "default": [
+                170,
+                215,
+                255
+            ]
+        },
+        "depth-label-color-positive": {
+            "type": "rgb",
+            "name": "Positive Depth Color",
+            "default": [
+                255,
+                170,
+                170
+            ]
+        },
+        "title-keybinds": {
+            "type": "title",
+            "name": "Keybinds"
+        },
+        "keybind-open-parallax-menu": {
+            "type": "keybind",
+            "name": "Open Parallax Menu",
+            "default": [],
+            "category": "editor"
+        },
+        "keybind-layerlist-up": {
+            "type": "keybind",
+            "name": "Up Layer List",
+            "default": [
+                "Up"
+            ],
+            "category": "editor",
+            "allow-in-text-inputs": true
+        },
+        "keybind-layerlist-down": {
+            "type": "keybind",
+            "name": "Down layer List",
+            "default": [
+                "Down"
+            ],
+            "category": "editor",
+            "allow-in-text-inputs": true
+        },
+        "title-default-center-objects": {
+            "type": "title",
+            "name": "Center Object Settings"
+        },
+        "int-root-object-ID": {
+            "type": "int",
+            "name": "Root Object ID",
+            "default": 3816,
+            "description": "default is 3816 or particle face"
+        },
+        "float-root-object-scale": {
+            "type": "float",
+            "name": "Root Object scale",
+            "default": 0.5,
+            "min": 0,
+            "max": 4,
+            "control": {
+                "arrows": true,
+                "arrow-step": 0.1,
+                "slider": true,
+                "slider-step": 0.1
+            }
+        },
+        "int-follow-object-ID": {
+            "type": "int",
+            "name": "Follow Object ID",
+            "default": 3805,
+            "description": "default is 3805 or particle square"
+        },
+        "float-follow-object-scale": {
+            "type": "float",
+            "name": "follow Object scale",
+            "default": 1,
+            "min": 0,
+            "max": 4,
+            "control": {
+                "arrows": true,
+                "arrow-step": 0.1,
+                "slider": true,
+                "slider-step": 0.1
+            }
+        }
+    }
 }
